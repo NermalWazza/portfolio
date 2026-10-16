@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Red/Blue — Harbour Street Bakery</title>
+<style>
+  :root {
+    --bg: #0f141a; --panel: #18202a; --panel2: #1f2a36; --border: #2c3b4b; --text: #dbe6f0; --muted: #8aa0b4;
+    --blue: #4a9eca; --blue-dk: #173f58;
+    --red: #e05a3a;  --red-dk: #5a2013;
+    --green: #4caf50; --green-dk: #1f4a22;
+    --ochre: #d0992b; --ochre-dk: #5a4210;
+    --purple: #a58be0; --purple-dk: #3a2c63;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.4; min-height: 100vh; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px 16px; background: #0a0e13; border-bottom: 2px solid var(--border); }
+  header h1 { font-size: 18px; letter-spacing: .5px; }
+  header h1 .r { color: var(--red); } header h1 .b { color: var(--blue); }
+  .badge { font-size: 11px; border: 1px solid var(--border); border-radius: 12px; padding: 2px 10px; color: var(--muted); }
+  .badge.safe { border-color: var(--green-dk); color: #9fd8a2; }
+  .chip { font-weight: 700; border-radius: 6px; padding: 3px 10px; font-size: 12px; border: 1px solid; }
+  .chip.red { color: #f6b3a3; border-color: var(--red); background: var(--red-dk); }
+  .chip.blue { color: #b6dbf0; border-color: var(--blue); background: var(--blue-dk); }
+  .chip.ochre { color: #f0d49a; border-color: var(--ochre); background: var(--ochre-dk); }
+  .chip.green { color: #b5e4b7; border-color: var(--green); background: var(--green-dk); }
+  .spacer { flex: 1; }
+  .hbtn { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+  .hbtn:hover { border-color: var(--blue); }
+  select.hbtn { padding: 4px 6px; }
+
+  main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 10px; padding: 10px 16px 16px; }
+  .col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .ph { padding: 6px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .ph.blue { background: var(--blue-dk); color: #b6dbf0; } .ph.red { background: var(--red-dk); color: #f6b3a3; }
+  .ph.green { background: var(--green-dk); color: #b5e4b7; } .ph.ochre { background: var(--ochre-dk); color: #f0d49a; }
+  .ph.purple { background: var(--purple-dk); color: #d6c9f5; } .ph.slate { background: #26323f; color: #b7c6d4; }
+  .pb { padding: 10px 12px; }
+
+  /* meters */
+  .meters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .meter .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .meter .lbl b { color: var(--text); }
+  .bar { height: 8px; background: #0c1117; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+  .bar > i { display: block; height: 100%; border-radius: 4px; transition: width .3s; }
+
+  /* topology */
+  #topo { width: 100%; height: auto; display: block; background: #0c1117; }
+  .edge { stroke: #3a4c5e; stroke-width: 2; }
+  .node rect { fill: var(--panel2); stroke: #3d5166; stroke-width: 2; rx: 8; }
+  .node text { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+  .node text.st { font-size: 11px; font-weight: 600; }
+  .node text.mon { font-size: 10px; fill: var(--blue); font-weight: 600; }
+  .node { cursor: pointer; }
+  .node:hover rect, .node:focus rect { stroke: var(--text); }
+  .node.focus rect { stroke: #fff; stroke-width: 3; }
+  .node.s-red rect { fill: #3a1a14; stroke: var(--red); } .node.s-red text.st { fill: #f6b3a3; }
+  .node.s-ochre rect { fill: #3a2d12; stroke: var(--ochre); } .node.s-ochre text.st { fill: #f0d49a; }
+  .node.s-green rect { fill: #17321a; stroke: var(--green); } .node.s-green text.st { fill: #b5e4b7; }
+  .node.s-blue rect { fill: #12303f; stroke: var(--blue); stroke-dasharray: 6 4; } .node.s-blue text.st { fill: #b6dbf0; }
+  .node.s-ext rect { fill: #101820; stroke: #4a5c6e; } .node.s-grey text.st { fill: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; color: var(--muted); padding: 8px 12px; border-top: 1px solid var(--border); }
+  .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .legend .lr::before { background: var(--red); } .legend .lb::before { background: var(--blue); } .legend .lg::before { background: var(--green); }
+  .legend .lo::before { background: var(--ochre); } .legend .lp::before { background: var(--purple); }
+
+  /* options */
+  .turn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .opt-list { display: flex; flex-direction: column; gap: 6px; max-height: 430px; overflow-y: auto; padding-right: 2px; }
+  .opt { text-align: left; background: var(--panel2); border: 1px solid var(--border); border-left-width: 4px; border-radius: 6px; padding: 6px 10px; display: block; width: 100%; }
+  .opt.red { border-left-color: var(--red); } .opt.blue { border-left-color: var(--blue); }
+  .opt:hover:not(:disabled) { border-color: var(--text); }
+  .opt:disabled { opacity: .55; cursor: not-allowed; }
+  .opt .t { display: flex; gap: 8px; align-items: baseline; font-weight: 600; }
+  .opt .cost { margin-left: auto; font-size: 11px; color: var(--ochre); white-space: nowrap; }
+  .opt .d { display: block; font-size: 12px; color: var(--muted); }
+  .opt .why { font-size: 11px; color: #f0a898; margin-top: 2px; }
+  .opt .att { display: block; font-size: 10px; color: var(--purple); }
+  .focus-note { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .result { border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; border: 1px solid var(--border); background: var(--panel2); }
+  .result.ok { border-color: var(--green); } .result.fail { border-color: var(--ochre); }
+  .waiting { color: var(--muted); padding: 6px 0; }
+
+  /* evidence / intel / log */
+  .ev { border: 1px solid var(--border); border-left-width: 4px; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; background: var(--panel2); font-size: 13px; }
+  .ev.new { border-left-color: var(--ochre); } .ev.malicious { border-left-color: var(--red); } .ev.benign { border-left-color: var(--green); }
+  .ev .meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 2px; }
+  .ev .st { font-weight: 700; } .ev.new .st { color: var(--ochre); } .ev.malicious .st { color: var(--red); } .ev.benign .st { color: var(--green); }
+  .ev button { margin-top: 4px; background: var(--blue-dk); border: 1px solid var(--blue); border-radius: 4px; padding: 2px 10px; font-size: 12px; }
+  .ev button:disabled { opacity: .5; cursor: not-allowed; }
+  .chain { list-style: none; } .chain li { padding: 3px 0; font-size: 13px; } .chain li.done { color: #f6b3a3; } .chain li.todo { color: var(--muted); }
+  .log { list-style: none; max-height: 300px; overflow-y: auto; font-size: 12.5px; }
+  .log li { padding: 4px 0 4px 8px; border-left: 3px solid var(--border); margin-bottom: 3px; }
+  .log li.red { border-left-color: var(--red); } .log li.blue { border-left-color: var(--blue); }
+  .log li.evidence { border-left-color: var(--ochre); } .log li.system { border-left-color: var(--purple); }
+  .log .tag { font-weight: 700; font-size: 10px; letter-spacing: .5px; margin-right: 6px; }
+  .log li.red .tag { color: var(--red); } .log li.blue .tag { color: var(--blue); } .log li.evidence .tag { color: var(--ochre); } .log li.system .tag { color: var(--purple); }
+  .log .rd { color: var(--muted); margin-right: 6px; }
+  .empty { color: var(--muted); font-size: 13px; padding: 4px 0; }
+
+  /* overlays */
+  .overlay { position: fixed; inset: 0; background: rgba(5, 8, 12, .85); display: none; align-items: flex-start; justify-content: center; padding: 20px 12px; overflow-y: auto; z-index: 50; }
+  .overlay.show { display: flex; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; max-width: 760px; width: 100%; padding: 18px 20px; }
+  .card h2 { font-size: 20px; margin-bottom: 6px; }
+  .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 14px 0; }
+  .mode { text-align: left; border-radius: 8px; padding: 10px 12px; border: 2px solid; background: var(--panel2); }
+  .mode b { display: block; margin-bottom: 2px; }
+  .mode small { color: var(--muted); }
+  .mode.red { border-color: var(--red); } .mode.blue { border-color: var(--blue); } .mode.both { border-color: var(--purple); }
+  .mode:hover { background: #26354a; }
+  .banner { border-radius: 8px; padding: 12px 14px; margin: 8px 0 12px; border: 2px solid; }
+  .banner.red { background: var(--red-dk); border-color: var(--red); } .banner.blue { background: var(--blue-dk); border-color: var(--blue); }
+  .banner h3 { font-size: 18px; }
+  .scores { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .scores table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+  .scores td { padding: 2px 0; border-bottom: 1px solid var(--border); } .scores td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .scores caption { text-align: left; font-weight: 700; padding-bottom: 4px; }
+  .scores .tot td { font-weight: 700; border-bottom: none; }
+  .lessons { margin: 4px 0 12px 18px; } .lessons li { margin-bottom: 4px; }
+  .lessons-h { color: var(--purple); font-weight: 700; margin-top: 10px; }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .btn { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 14px; font-weight: 600; }
+  .btn.primary { background: var(--green-dk); border-color: var(--green); }
+  .btn:hover { border-color: var(--text); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  @media (max-width: 900px) {
+    main { display: flex; flex-direction: column; gap: 10px; padding: 8px; }
+    .col { display: contents; }
+    #p-map { order: 1; } #p-act { order: 2; } #p-info { order: 3; } #p-status { order: 4; } #p-log { order: 5; }
+    header { padding: 8px; }
+    .scores { grid-template-columns: 1fr; }
+    .opt-list { max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="r">Cyber Red</span> / <span class="b">Blue</span> — Harbour Street Bakery</h1>
+  <span class="badge safe">Fictional simulation · no real network activity</span>
+  <span class="spacer"></span>
+  <span id="h-round" class="chip ochre" aria-live="polite"></span>
+  <span id="h-phase" class="chip" aria-live="polite"></span>
+  <label class="sr-only" for="persp">View</label>
+  <select id="persp" class="hbtn" title="Whose view to show"></select>
+  <button class="hbtn" id="b-new" type="button">New game</button>
+</header>
+
+<main>
+  <div class="col">
+    <div class="panel" id="p-map">
+      <div class="ph slate">Network map <span id="topo-hint" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+      <svg id="topo" viewBox="0 0 640 500" role="group" aria-label="Network topology"></svg>
+      <div class="legend">
+        <span class="lr">Red: threat / foothold</span><span class="lb">Blue: defence / evidence</span><span class="lg">Green: recovery / verified clean</span>
+        <span class="lo">Ochre: uncertain / pending</span><span class="lp">Purple: analysis</span>
+      </div>
+    </div>
+    <div class="panel" id="p-status"><div class="ph slate">Resources</div><div class="pb meters" id="meters"></div></div>
+    <div class="panel" id="p-log"><div class="ph slate">Chronological event log</div><div class="pb"><ul class="log" id="log" aria-live="polite"></ul></div></div>
+  </div>
+
+  <div class="col">
+    <div class="panel" id="p-act"><div class="ph" id="act-h"></div><div class="pb" id="act-b"></div></div>
+    <div class="panel" id="p-info"><div class="ph" id="info-h"></div><div class="pb" id="info-b"></div></div>
+  </div>
+</main>
+
+<div class="overlay show" id="ov-start" role="dialog" aria-modal="true" aria-labelledby="start-h">
+  <div class="card">
+    <h2 id="start-h">Harbour Street Bakery under attack</h2>
+    <p>A fictional small business runs a public web shop and a customer database. <b style="color:var(--red)">Red</b> wants to steal the customer data
+      from APP-DB. <b style="color:var(--blue)">Blue</b> must detect, contain and recover — without taking the shop offline. One action each per round, ten rounds.</p>
+    <div class="modes">
+      <button class="mode red" type="button" data-mode="red"><b>Play Red</b><small>You attack; an AI analyst defends. Chain footholds, credentials and exfiltration within budget.</small></button>
+      <button class="mode blue" type="button" data-mode="blue"><b>Play Blue</b><small>You defend; an AI adversary attacks. You only see what your monitoring shows.</small></button>
+      <button class="mode both" type="button" data-mode="both"><b>Hot-seat (both)</b><small>Take both turns, with the full umpire view. Good for learning the rules.</small></button>
+    </div>
+    <p class="note">Everything here is abstract state in your browser: no scanning, exploits, credentials or network traffic exist. MITRE ATT&amp;CK ids are labels for orientation only; the mechanics are simplified and do not reproduce real attacks.</p>
+  </div>
+</div>
+
+<div class="overlay" id="ov-report" role="dialog" aria-modal="true" aria-labelledby="rep-h"><div class="card" id="report"></div></div>
+
+<script>
+/* Cyber Red/Blue core — deterministic, DOM-free, network-free game engine.
+ * Fictional small-business network. Everything is abstract state; nothing here touches a real
+ * network, host, credential or exploit. MITRE ATT&CK ids are labels for orientation only; the
+ * mechanics are simplified and do NOT claim to reproduce real attacks.
+ * Pure functions: every action returns a NEW state; invalid actions return the old state untouched.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CyberCore = factory();
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const ROUNDS = 10, RED_BUDGET = 12, BLUE_BUDGET = 10, OUTAGE_LIMIT = 30;
+  const CONF_RANK = { low: 1, medium: 2, high: 3 };
+
+  const NODES = {
+    internet: { label: 'INTERNET' },
+    firewall: { label: 'FIREWALL' },
+    switch:   { label: 'INTERNAL SWITCH' },
+    web:      { label: 'WEB' },
+    userpc:   { label: 'USER-PC' },
+    server:   { label: 'SERVER' },
+    appdb:    { label: 'APP-DB' },
+    backup:   { label: 'BACKUP' },
+  };
+  const EDGES = [['internet', 'firewall'], ['firewall', 'switch'], ['switch', 'web'], ['switch', 'userpc'],
+                 ['switch', 'server'], ['web', 'appdb'], ['server', 'backup']];
+  const OUTAGE_WEIGHT = { web: 3, server: 3, appdb: 3, userpc: 1 };
+
+  /* ── Red catalogue ───────────────────────────────────────────────────────── */
+  const RED = {
+    recon:      { label: 'Scan the perimeter',        attck: 'T1595 Active Scanning',            cost: 1, noise: 1, targets: ['firewall'],
+                  desc: 'Map externally visible services. Needed before exploiting the web app.' },
+    phish:      { label: 'Phish a staff member',      attck: 'T1566 Phishing',                   cost: 2, noise: 1, targets: ['userpc'],
+                  desc: 'Trick a user into running a payload; gains a foothold and the user\'s credentials.' },
+    exploit:    { label: 'Exploit the public web app', attck: 'T1190 Exploit Public-Facing App', cost: 3, noise: 3, targets: ['web'],
+                  desc: 'Abuse a flaw in the internet-facing site. Requires prior scanning.' },
+    dump:       { label: 'Harvest stored credentials', attck: 'T1003 OS Credential Dumping',     cost: 2, noise: 3, targets: ['web', 'server'],
+                  desc: 'From a foothold, look for database credentials stored on the host.' },
+    lateral:    { label: 'Move laterally to the server', attck: 'T1078 Valid Accounts',          cost: 2, noise: 2, targets: ['server'],
+                  desc: 'Reuse staff credentials from USER-PC or WEB to log in to SERVER.' },
+    accessdb:   { label: 'Access the customer database', attck: 'T1021 Remote Services',         cost: 2, noise: 2, targets: ['appdb'],
+                  desc: 'Use database credentials from a WEB or SERVER foothold.' },
+    exfil_bulk: { label: 'Exfiltrate data (bulk)',    attck: 'T1041 Exfiltration Over C2',       cost: 3, noise: 5, targets: ['appdb'],
+                  desc: 'Send the customer data out over a direct outbound connection. OBJECTIVE.' },
+    exfil_cloud:{ label: 'Exfiltrate data (cloud channel)', attck: 'T1567 Exfil to Web Service', cost: 4, noise: 3, targets: ['appdb'],
+                  desc: 'Slip data out via an allowed cloud-storage service. OBJECTIVE; costs more.' },
+    backups:    { label: 'Destroy backups',           attck: 'T1490 Inhibit System Recovery',    cost: 2, noise: 4, targets: ['backup'],
+                  desc: 'From a SERVER foothold, delete snapshots so recovery gets harder.' },
+    cover:      { label: 'Lie low / cover tracks',    attck: 'T1070 Indicator Removal',          cost: 1, noise: 0, targets: [null],
+                  desc: 'Suppress low/medium-confidence evidence from your next action.' },
+  };
+
+  /* ── Blue catalogue ──────────────────────────────────────────────────────── */
+  const BLUE = {
+    triage:    { label: 'Investigate',                cost: 1, avail: 0,  targets: ['firewall', 'web', 'userpc', 'server', 'appdb', 'backup'],
+                 desc: 'Analyse logs for one node. Conclusive only if telemetry exists there.' },
+    sensor:    { label: 'Deploy monitoring',          cost: 0, avail: 0,  targets: ['userpc', 'appdb'],
+                 desc: 'EDR on USER-PC (cost 2) or database audit on APP-DB (cost 1).' },
+    patch:     { label: 'Patch the web app',          cost: 2, avail: -5, targets: ['web'],
+                 desc: 'Closes the public web flaw (restart causes brief downtime).' },
+    mfa:       { label: 'Reset credentials + enforce MFA', cost: 2, avail: -5, targets: [null],
+                 desc: 'Invalidates stolen staff and DB credentials; blocks credential reuse.' },
+    segment:   { label: 'Segment the network',        cost: 3, avail: -5, targets: [null],
+                 desc: 'Restrict switch rules so USER-PC/WEB cannot log in to SERVER.' },
+    leastpriv: { label: 'Enforce least privilege',    cost: 2, avail: -2, targets: [null],
+                 desc: 'Remove stored DB secrets from hosts; credential harvesting yields nothing.' },
+    egress:    { label: 'Egress filtering',           cost: 3, avail: -8, targets: [null],
+                 desc: 'Block direct bulk outbound transfers (also blocks some legitimate uploads).' },
+    dlp:       { label: 'Data-loss prevention rules', cost: 3, avail: -3, targets: [null],
+                 desc: 'Block unsanctioned cloud-storage uploads of customer data.' },
+    training:  { label: 'Email filtering + user training', cost: 2, avail: 0, targets: [null],
+                 desc: 'Phishing attempts no longer land a payload.' },
+    isolate:   { label: 'Isolate node',               cost: 1, avail: 0,  targets: ['web', 'userpc', 'server', 'appdb'],
+                 desc: 'Cut the node off. Contains a foothold but costs availability every round.' },
+    restore:   { label: 'Rebuild / restore node',     cost: 2, avail: 0,  targets: ['web', 'userpc', 'server', 'appdb'],
+                 desc: 'Evict a foothold and bring the node back (costs 4 if backups were destroyed).' },
+    restorebk: { label: 'Rebuild backup service',     cost: 3, avail: 0,  targets: ['backup'],
+                 desc: 'Re-establish clean backups after they were destroyed.' },
+    pass:      { label: 'Monitor and wait',           cost: 0, avail: 0,  targets: [null],
+                 desc: 'Take no action this round.' },
+  };
+
+  const DECOYS = [
+    { round: 2, at: 'server',   conf: 'medium', tag: 'decoy', text: 'Auth log: administrator login to SERVER from a new laptop.', truth: 'An authorised IT contractor working late. Benign.' },
+    { round: 3, at: 'web',      conf: 'low',    tag: 'decoy', text: 'Web log: traffic spike on the shop page.',                    truth: 'A marketing email went out. Benign.' },
+    { round: 5, at: 'firewall', conf: 'medium', tag: 'decoy', text: 'Firewall: large outbound transfer to a cloud-storage provider.', truth: 'The scheduled company backup upload. Benign.' },
+  ];
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+  /* ── State ───────────────────────────────────────────────────────────────── */
+  function newGame() {
+    const nodes = {};
+    Object.keys(NODES).forEach(k => { nodes[k] = { compromised: false, isolated: false }; });
+    const s = {
+      round: 1, phase: 'red', ended: null,
+      nodes,
+      sensors: { firewall: true, web: true, server: true, userpc: false, appdb: false, switch: false },
+      red:  { budget: RED_BUDGET, stealth: 100, recon: false, userCreds: false, dbCreds: false, hide: false, exfil: false, backupsDestroyed: false, failed: {} },
+      blue: { budget: BLUE_BUDGET, availability: 100, patched: false, mfa: false, segmented: false, egress: false, leastPriv: false, dlp: false, training: false, known: {} },
+      evidence: [], log: [], nextId: 1,
+      stats: { everFoothold: false, everDbCreds: false, everDbAccess: false, everRecon: false, everBackups: false, evictions: 0, confirmed: 0, wasted: 0, redActions: 0, blueActions: 0 },
+    };
+    log(s, 'system', ['red', 'blue', 'umpire'], 'Scenario start: "Harbour Street Bakery" — a fictional small-business network. Red objective: steal the customer database from APP-DB. Blue objective: keep it safe and the shop trading for ' + ROUNDS + ' rounds.');
+    startRound(s);
+    return s;
+  }
+
+  function log(s, side, vis, text) { s.log.push({ n: s.log.length + 1, round: s.round, side, vis, text }); }
+
+  function startRound(s) {
+    DECOYS.filter(d => d.round === s.round).forEach(d => {
+      pushEvidence(s, { at: d.at, conf: d.conf, tag: 'decoy', text: d.text, real: false, truth: d.truth }, false);
+    });
+    if (s.red.budget < 1) end(s, 'blue', 'exhausted', 'Red has no operating budget left and cannot take another action.');
+  }
+
+  function pushEvidence(s, ev, suppressible) {
+    const hidden = suppressible && s.red.hide && CONF_RANK[ev.conf] <= 2;
+    const visible = !!s.sensors[ev.at] && !hidden;
+    const e = { id: s.nextId++, round: s.round, at: ev.at, conf: ev.conf, tag: ev.tag, text: ev.text, real: ev.real, truth: ev.truth || null,
+                visible, why: visible ? null : (hidden ? 'suppressed by Red covering tracks' : 'no monitoring at ' + NODES[ev.at].label), status: 'new' };
+    s.evidence.push(e);
+    if (visible) log(s, 'evidence', ['blue', 'umpire'], 'ALERT [' + ev.conf + '] ' + ev.text);
+    else log(s, 'evidence', ['umpire'], 'Unseen by Blue (' + e.why + '): ' + ev.text);
+    return e;
+  }
+
+  function end(s, winner, code, reason) {
+    if (s.ended) return;
+    s.ended = { winner, code, reason, round: s.round };
+    s.phase = 'ended';
+    log(s, 'system', ['red', 'blue', 'umpire'], (winner === 'red' ? 'RED WINS: ' : 'BLUE WINS: ') + reason);
+  }
+
+  function foothold(s, n) { return s.nodes[n].compromised && !s.nodes[n].isolated; }
+  function compromise(s, n) {
+    s.nodes[n].compromised = true; s.blue.known[n] = null; s.stats.everFoothold = true;
+  }
+
+  /* ── Option listings (with reasons) ─────────────────────────────────────── */
+  function redCheck(s, id, target) {
+    const a = RED[id];
+    if (!a) return 'Unknown action.';
+    if (s.ended) return 'The scenario is over.';
+    if (s.phase !== 'red') return 'It is not Red\'s turn.';
+    if (a.targets.indexOf(target === undefined ? null : target) < 0) return 'Invalid target for this action.';
+    if (s.red.budget < a.cost) return 'Not enough Red budget (' + s.red.budget + ' left, needs ' + a.cost + ').';
+    switch (id) {
+      case 'recon': if (s.red.recon) return 'Perimeter already mapped.'; break;
+      case 'phish': if (foothold(s, 'userpc')) return 'Already have a foothold on USER-PC.'; break;
+      case 'exploit':
+        if (!s.red.recon) return 'Requires perimeter scan first.';
+        if (foothold(s, 'web')) return 'Already have a foothold on WEB.'; break;
+      case 'dump':
+        if (!foothold(s, target)) return 'Requires a foothold on ' + NODES[target].label + '.';
+        if (s.red.dbCreds) return 'Already hold database credentials.'; break;
+      case 'lateral':
+        if (!s.red.userCreds) return 'Requires valid staff credentials.';
+        if (!foothold(s, 'userpc') && !foothold(s, 'web')) return 'Requires a foothold on USER-PC or WEB.';
+        if (foothold(s, 'server')) return 'Already have a foothold on SERVER.'; break;
+      case 'accessdb':
+        if (!s.red.dbCreds) return 'Requires database credentials.';
+        if (!foothold(s, 'web') && !foothold(s, 'server')) return 'Requires a foothold on WEB or SERVER.';
+        if (foothold(s, 'appdb')) return 'Already have a foothold on APP-DB.'; break;
+      case 'exfil_bulk': case 'exfil_cloud':
+        if (!foothold(s, 'appdb')) return 'Requires a foothold on APP-DB.'; break;
+      case 'backups':
+        if (!foothold(s, 'server')) return 'Requires a foothold on SERVER.';
+        if (s.red.backupsDestroyed) return 'Backups already destroyed.'; break;
+      default: break;
+    }
+    return null;
+  }
+
+  function sensorCost(target) { return target === 'userpc' ? 2 : 1; }
+  function blueCost(id, target) { return id === 'sensor' ? sensorCost(target) : BLUE[id].cost; }
+  function restoreCost(s) { return s.red.backupsDestroyed ? 4 : BLUE.restore.cost; }
+
+  function blueCheck(s, id, target) {
+    const a = BLUE[id];
+    if (!a) return 'Unknown action.';
+    if (s.ended) return 'The scenario is over.';
+    if (s.phase !== 'blue') return 'It is not Blue\'s turn.';
+    if (a.targets.indexOf(target === undefined ? null : target) < 0) return 'Invalid target for this action.';
+    const cost = id === 'restore' ? restoreCost(s) : blueCost(id, target);
+    if (s.blue.budget < cost) return 'Not enough Blue budget (' + s.blue.budget + ' left, needs ' + cost + ').';
+    switch (id) {
+      case 'sensor': if (s.sensors[target]) return 'Monitoring already deployed there.'; break;
+      case 'patch': if (s.blue.patched) return 'Already patched.'; break;
+      case 'mfa': if (s.blue.mfa) return 'MFA already enforced.'; break;
+      case 'segment': if (s.blue.segmented) return 'Already segmented.'; break;
+      case 'leastpriv': if (s.blue.leastPriv) return 'Already enforced.'; break;
+      case 'egress': if (s.blue.egress) return 'Already enabled.'; break;
+      case 'dlp': if (s.blue.dlp) return 'Already enabled.'; break;
+      case 'training': if (s.blue.training) return 'Already in place.'; break;
+      case 'isolate': if (s.nodes[target].isolated) return NODES[target].label + ' is already isolated.'; break;
+      case 'restore':
+        if (!s.nodes[target].compromised && !s.nodes[target].isolated) return NODES[target].label + ' is running normally; nothing to restore.'; break;
+      case 'restorebk': if (!s.red.backupsDestroyed) return 'Backups are intact.'; break;
+      default: break;
+    }
+    return null;
+  }
+
+  function listOptions(s, side) {
+    const cat = side === 'red' ? RED : BLUE;
+    const out = [];
+    Object.keys(cat).forEach(id => {
+      cat[id].targets.forEach(t => {
+        const reason = side === 'red' ? redCheck(s, id, t) : blueCheck(s, id, t);
+        const cost = side === 'red' ? cat[id].cost : (id === 'restore' ? restoreCost(s) : blueCost(id, t));
+        out.push({ id, target: t, label: cat[id].label, desc: cat[id].desc, attck: cat[id].attck || null, cost, legal: !reason, reason });
+      });
+    });
+    return out;
+  }
+
+  /* ── Red turn ────────────────────────────────────────────────────────────── */
+  function redAct(state, id, target) {
+    const t = target === undefined ? null : target;
+    const reason = redCheck(state, id, t);
+    if (reason) return { ok: false, error: reason, state };
+    const s = clone(state);
+    const a = RED[id];
+    s.red.budget -= a.cost; s.stats.redActions++;
+    s.red.stealth = clamp(s.red.stealth - a.noise * 4, 0, 100);
+    const where = t ? NODES[t].label : 'the network';
+    const failKey = id + '@' + t;
+    let success = false, explain = '';
+
+    switch (id) {
+      case 'recon':
+        success = true; s.red.recon = true; s.stats.everRecon = true;
+        explain = 'Scan complete: the public web app and VPN-less firewall are mapped.';
+        pushEvidence(s, { at: 'firewall', conf: 'low', tag: 'recon', real: true, text: 'Firewall: sequential connection attempts to many ports from one external address.' }, true);
+        break;
+      case 'phish':
+        if (s.blue.training) { explain = 'The email was filtered and the user reported it. No payload ran.';
+          pushEvidence(s, { at: 'firewall', conf: 'low', tag: 'phish_fail', real: true, text: 'Mail gateway: suspicious email quarantined before delivery.' }, true); break; }
+        success = true; compromise(s, 'userpc');
+        s.red.userCreds = !s.blue.mfa;
+        explain = s.blue.mfa ? 'Payload ran on USER-PC (foothold). Stolen password is useless: MFA is enforced.'
+                             : 'Payload ran on USER-PC (foothold) and the user\'s credentials were captured.';
+        pushEvidence(s, { at: 'userpc', conf: 'high', tag: 'phish', real: true, text: 'EDR: an Office document spawned a script interpreter on USER-PC.' }, true);
+        pushEvidence(s, { at: 'firewall', conf: 'low', tag: 'phish', real: true, text: 'Firewall: USER-PC opened a new outbound connection to a rarely seen host.' }, true);
+        break;
+      case 'exploit':
+        if (s.blue.patched || s.nodes.web.isolated) {
+          explain = s.blue.patched ? 'The flaw is patched; the exploit attempts were rejected.' : 'WEB is isolated; the exploit could not reach it.';
+          pushEvidence(s, { at: 'web', conf: 'low', tag: 'webexploit_fail', real: true, text: 'Web log: repeated malformed requests, all rejected.' }, true); break; }
+        success = true; compromise(s, 'web');
+        explain = 'The public web flaw was exploited: Red now has a foothold on WEB.';
+        pushEvidence(s, { at: 'web', conf: 'medium', tag: 'webexploit', real: true, text: 'Web log: malformed requests followed by an unusual 200 response on an upload path.' }, true);
+        break;
+      case 'dump':
+        if (s.blue.leastPriv) { explain = 'Least privilege is enforced: no database secrets are stored on ' + where + '. Nothing to harvest.';
+          pushEvidence(s, { at: t, conf: 'low', tag: 'creds_fail', real: true, text: NODES[t].label + ' host log: process searched config files for secrets.' }, true); break; }
+        success = true; s.red.dbCreds = true; s.stats.everDbCreds = true;
+        explain = 'A service account password for the customer database was found on ' + where + '.';
+        pushEvidence(s, { at: t, conf: 'medium', tag: 'creds', real: true, text: NODES[t].label + ' host log: a process read the application credential store.' }, true);
+        break;
+      case 'lateral':
+        if (s.blue.segmented) { explain = 'Network segmentation blocked the login: USER-PC and WEB may not reach SERVER.';
+          pushEvidence(s, { at: 'firewall', conf: 'medium', tag: 'lateral_fail', real: true, text: 'Switch ACL: denied login attempts to SERVER from a workstation segment.' }, true); break; }
+        if (s.nodes.server.isolated) { explain = 'SERVER is isolated and unreachable.'; break; }
+        success = true; compromise(s, 'server');
+        explain = 'Staff credentials worked: Red logged in to SERVER (no segmentation to stop it).';
+        pushEvidence(s, { at: 'server', conf: 'medium', tag: 'lateral', real: true, text: 'Auth log: remote login to SERVER from USER-PC outside business hours.' }, true);
+        break;
+      case 'accessdb':
+        if (s.nodes.appdb.isolated) { explain = 'APP-DB is isolated and unreachable.'; break; }
+        success = true; compromise(s, 'appdb'); s.stats.everDbAccess = true;
+        explain = 'The database credentials were accepted: Red now has a foothold on APP-DB.';
+        pushEvidence(s, { at: 'appdb', conf: 'high', tag: 'dbaccess', real: true, text: 'DB audit: login by the web service account from an unusual host, then a full table listing.' }, true);
+        break;
+      case 'exfil_bulk':
+        if (s.blue.egress) { explain = 'Egress filtering blocked the outbound transfer. The customer data stayed inside.';
+          pushEvidence(s, { at: 'firewall', conf: 'high', tag: 'exfil_fail', real: true, text: 'Firewall: egress rule blocked a large outbound transfer from APP-DB.' }, false); break; }
+        success = true; s.red.exfil = true;
+        explain = 'The customer database left the building via a direct outbound connection.';
+        pushEvidence(s, { at: 'firewall', conf: 'high', tag: 'exfil', real: true, text: 'Firewall: 340 MB sent to an unknown external host.' }, false);
+        break;
+      case 'exfil_cloud':
+        if (s.blue.dlp) { explain = 'DLP rules blocked the unsanctioned cloud upload.';
+          pushEvidence(s, { at: 'firewall', conf: 'high', tag: 'exfil_fail', real: true, text: 'DLP: customer-record upload to personal cloud storage blocked.' }, false); break; }
+        success = true; s.red.exfil = true;
+        explain = 'The customer database was tunnelled out through an allowed cloud-storage service.';
+        pushEvidence(s, { at: 'firewall', conf: 'medium', tag: 'exfil', real: true, text: 'Firewall: 340 MB uploaded to a cloud-storage provider.' }, false);
+        break;
+      case 'backups':
+        success = true; s.red.backupsDestroyed = true; s.stats.everBackups = true; s.nodes.backup.compromised = true;
+        explain = 'Backup snapshots were deleted. Recovery will cost Blue more.';
+        pushEvidence(s, { at: 'server', conf: 'high', tag: 'backup', real: true, text: 'SERVER log: backup service stopped and snapshots deleted.' }, true);
+        break;
+      case 'cover':
+        success = true; s.red.hide = true;
+        explain = 'Red cleans logs and keeps quiet: low/medium evidence from the next action will be suppressed.';
+        break;
+      default: break;
+    }
+    if (id !== 'cover') s.red.hide = false; // the suppression applies to exactly one subsequent action
+    if (id === 'cover') s.red.hide = true;
+    if (success) delete s.red.failed[failKey]; else s.red.failed[failKey] = (s.red.failed[failKey] || 0) + 1;
+    log(s, 'red', ['red', 'umpire'], 'RED: ' + a.label + (t ? ' → ' + NODES[t].label : '') + ' [' + a.attck + ', cost ' + a.cost + '] — ' + (success ? 'SUCCESS. ' : 'FAILED. ') + explain);
+
+    if (s.red.exfil) end(s, 'red', 'exfil', 'Red exfiltrated the customer database from APP-DB.');
+    else s.phase = 'blue';
+    return { ok: true, success, explain, state: s };
+  }
+
+  /* ── Blue turn ───────────────────────────────────────────────────────────── */
+  function blueView(s) {
+    const v = {};
+    Object.keys(NODES).forEach(n => {
+      const unresolved = s.evidence.filter(e => e.visible && e.at === n && e.status === 'new');
+      const k = s.blue.known[n];
+      let st = 'unknown';
+      if (s.nodes[n] && s.nodes[n].isolated) st = 'isolated';
+      else if (k === 'compromised') st = 'compromised';
+      else if (unresolved.some(e => CONF_RANK[e.conf] >= 2)) st = 'suspect';
+      else if (unresolved.length) st = 'watch';
+      else if (k === 'clean') st = 'clean';
+      v[n] = st;
+    });
+    return v;
+  }
+
+  function sensorFor(n) { return n === 'backup' ? 'server' : n; }
+
+  function blueAct(state, id, target) {
+    const t = target === undefined ? null : target;
+    const reason = blueCheck(state, id, t);
+    if (reason) return { ok: false, error: reason, state };
+    const s = clone(state);
+    const a = BLUE[id];
+    const cost = id === 'restore' ? restoreCost(state) : blueCost(id, t);
+    s.blue.budget -= cost; s.stats.blueActions++;
+    let note = '';
+    const avail = delta => { s.blue.availability = clamp(s.blue.availability + delta, 0, 100); };
+    switch (id) {
+      case 'triage': {
+        if (!s.sensors[sensorFor(t)]) { note = 'INCONCLUSIVE — there is no monitoring on ' + NODES[t].label + ', so the logs cannot show whether it is compromised.'; break; }
+        const hits = s.evidence.filter(e => e.visible && e.at === t && e.status === 'new');
+        const mal = hits.filter(e => e.real);
+        hits.forEach(e => { e.status = e.real ? 'malicious' : 'benign'; });
+        s.stats.confirmed += new Set(mal.map(e => e.tag)).size;
+        if (t !== 'firewall') s.blue.known[t] = s.nodes[t].compromised ? 'compromised' : 'clean';
+        const benign = hits.filter(e => !e.real);
+        note = (s.nodes[t].compromised && t !== 'firewall' ? 'CONFIRMED COMPROMISED. ' : (t === 'firewall' ? '' : 'No compromise found. ')) +
+               (mal.length ? mal.length + ' alert(s) confirmed malicious. ' : '') +
+               benign.map(e => 'Dismissed as benign: ' + e.truth + ' ').join('') +
+               (!hits.length && !s.nodes[t].compromised ? 'Nothing unusual in the logs.' : '');
+        break; }
+      case 'sensor': s.sensors[t] = true; note = (t === 'userpc' ? 'EDR' : 'Database audit logging') + ' now active on ' + NODES[t].label + ' — future activity there becomes visible.'; break;
+      case 'patch': s.blue.patched = true; avail(a.avail); note = 'WEB patched. New exploitation is blocked; an existing foothold is NOT removed.'; break;
+      case 'mfa': s.blue.mfa = true; s.red.userCreds = false; s.red.dbCreds = false; avail(a.avail); note = 'All passwords reset and MFA enforced: stolen staff and database credentials are void.'; break;
+      case 'segment': s.blue.segmented = true; avail(a.avail); note = 'Switch rules now stop workstation/web segments reaching SERVER.'; break;
+      case 'leastpriv': s.blue.leastPriv = true; s.red.dbCreds = false; avail(a.avail); note = 'Secrets removed from hosts; previously stolen database credentials rotated.'; break;
+      case 'egress': s.blue.egress = true; avail(a.avail); note = 'Direct bulk outbound transfers are now blocked (some legitimate uploads break).'; break;
+      case 'dlp': s.blue.dlp = true; avail(a.avail); note = 'Unsanctioned cloud uploads of customer data are now blocked.'; break;
+      case 'training': s.blue.training = true; note = 'Mail filtering tightened and staff briefed: phishing payloads no longer land.'; break;
+      case 'isolate':
+        s.nodes[t].isolated = true; avail(-OUTAGE_WEIGHT[t]);
+        if (!s.nodes[t].compromised) s.stats.wasted++;
+        note = NODES[t].label + ' isolated. ' + (s.nodes[t].compromised ? 'Red\'s foothold there is contained.' : 'It was not compromised — an unnecessary outage.') + ' Each round isolated costs availability.';
+        break;
+      case 'restore':
+        if (s.nodes[t].compromised) { s.stats.evictions++; note = NODES[t].label + ' rebuilt: Red\'s foothold is evicted' + (s.red.backupsDestroyed ? ' (slow, no clean backups).' : ' from clean backups.'); }
+        else { s.stats.wasted++; note = NODES[t].label + ' was not compromised — restore was unnecessary.'; }
+        s.nodes[t].compromised = false; s.nodes[t].isolated = false; s.blue.known[t] = 'clean'; avail(5);
+        break;
+      case 'restorebk': s.red.backupsDestroyed = false; s.nodes.backup.compromised = false; avail(3); note = 'Backup service rebuilt and verified.'; break;
+      case 'pass': note = 'No action taken.'; break;
+      default: break;
+    }
+    log(s, 'blue', ['blue', 'umpire'], 'BLUE: ' + a.label + (t ? ' → ' + NODES[t].label : '') + ' [cost ' + cost + '] — ' + note);
+    advance(s);
+    return { ok: true, note, state: s };
+  }
+
+  function advance(s) {
+    Object.keys(OUTAGE_WEIGHT).forEach(n => { if (s.nodes[n].isolated) s.blue.availability = clamp(s.blue.availability - OUTAGE_WEIGHT[n], 0, 100); });
+    log(s, 'system', ['blue', 'red', 'umpire'], 'End of round ' + s.round + ' — business availability ' + s.blue.availability + '%.');
+    if (s.blue.availability < OUTAGE_LIMIT) { end(s, 'red', 'outage', 'Business availability fell to ' + s.blue.availability + '% — the defence caused an outage worse than the attack.'); return; }
+    if (s.round >= ROUNDS) { end(s, 'blue', 'survived', 'The customer database stayed safe for all ' + ROUNDS + ' rounds.'); return; }
+    s.round++; s.phase = 'red';
+    startRound(s);
+  }
+
+  /* ── Scoring (deterministic function of state) ───────────────────────────── */
+  function scores(s) {
+    const st = s.stats, R = s.red, B = s.blue;
+    const redParts = [
+      ['Perimeter mapped', st.everRecon ? 5 : 0], ['Initial foothold', st.everFoothold ? 10 : 0],
+      ['Database credentials', st.everDbCreds ? 10 : 0], ['Database access', st.everDbAccess ? 20 : 0],
+      ['Backups destroyed', st.everBackups ? 10 : 0], ['Data exfiltrated', R.exfil ? 40 : 0],
+      ['Stealth bonus (only if objective met)', R.exfil ? Math.floor(R.stealth / 10) : 0],
+    ];
+    const bluePart = [
+      ['Attack types confirmed by analysis', Math.min(30, st.confirmed * 5)], ['Footholds evicted', st.evictions * 10],
+      ['Availability kept', Math.round(B.availability / 5)], ['Unspent budget', B.budget],
+      ['Data stolen', R.exfil ? -40 : 0], ['Unnecessary isolate/restore', -5 * st.wasted],
+    ];
+    const sum = a => a.reduce((x, p) => x + p[1], 0);
+    return { red: { total: sum(redParts), parts: redParts }, blue: { total: sum(bluePart), parts: bluePart } };
+  }
+
+  /* ── After-action report ─────────────────────────────────────────────────── */
+  function report(s) {
+    const lessons = [];
+    const B = s.blue, R = s.red, st = s.stats;
+    const missed = s.evidence.filter(e => e.real && !e.visible);
+    if (R.exfil && !B.egress && !B.dlp) lessons.push('Data protection: no outbound controls were in place, so the stolen data left unhindered. Egress filtering and DLP are the last line of defence.');
+    if (st.everDbCreds && !B.leastPriv) lessons.push('Least privilege: database secrets were stored on application hosts, so one foothold exposed them.');
+    if (st.everFoothold && !B.segmented && s.nodes.server.compromised) lessons.push('Network segmentation: with no restrictions between zones, a workstation or web foothold reached SERVER.');
+    if (R.userCreds || (st.everFoothold && !B.mfa && s.nodes.userpc.compromised)) lessons.push('Credential exposure: stolen staff credentials were reusable because MFA was not enforced.');
+    if (missed.length) lessons.push('Monitoring and alerting: ' + missed.length + ' malicious action(s) produced no visible alert (' + Array.from(new Set(missed.map(m => m.why))).join('; ') + '). You cannot respond to what you cannot see.');
+    if (st.wasted) lessons.push('Containment trade-off: ' + st.wasted + ' response(s) hit clean systems, costing availability without stopping Red.');
+    if (s.ended && s.ended.code === 'outage') lessons.push('Availability: aggressive containment can hurt the business more than the intrusion; weigh protection against uptime.');
+    if (s.ended && s.ended.winner === 'blue' && B.egress) lessons.push('Egress filtering stopped bulk exfiltration, but it broke some legitimate uploads (availability cost).');
+    if (R.backupsDestroyed) lessons.push('Backup and recovery: Red targeted backups to slow recovery; keep an offline or immutable copy.');
+    if (st.evictions) lessons.push('Recovery: rebuilding compromised systems evicts a foothold, but stolen credentials stay valid until they are reset.');
+    if (!lessons.length) lessons.push('Layered defence: no single control decided this scenario.');
+    return { ended: s.ended, rounds: s.round, scores: scores(s), lessons, missedEvidence: missed.map(m => ({ round: m.round, text: m.text, why: m.why })),
+             timeline: s.log.filter(l => l.vis.indexOf('umpire') >= 0) };
+  }
+
+  /* ── Deterministic AI policies ───────────────────────────────────────────── */
+  function redPolicy(s) {
+    const f = s.red.failed, tried = k => (f[k] || 0) >= 1, has = n => foothold(s, n);
+    const legal = (id, t) => !redCheck(s, id, t);
+    const want = [];
+    if (has('appdb')) { want.push(['exfil_bulk', 'appdb'], ['exfil_cloud', 'appdb']); }
+    if (s.red.dbCreds && (has('web') || has('server'))) want.push(['accessdb', 'appdb']);
+    if (!s.red.dbCreds) { if (has('web')) want.push(['dump', 'web']); if (has('server')) want.push(['dump', 'server']); }
+    if (s.red.userCreds && (has('userpc') || has('web')) && !has('server')) want.push(['lateral', 'server']);
+    if (!has('web')) { if (!s.red.recon) want.push(['recon', 'firewall']); else want.push(['exploit', 'web']); }
+    if (!has('userpc')) want.push(['phish', 'userpc']);
+    // prefer untried, then (once per full cycle) allow retry of failed ones after a long wait
+    for (const [id, t] of want) if (legal(id, t) && !tried(id + '@' + t)) return { id, target: t };
+    if (has('server') && !s.red.backupsDestroyed && legal('backups', 'backup') && !tried('backups@backup')) return { id: 'backups', target: 'backup' };
+    for (const [id, t] of want) if (legal(id, t) && (f[id + '@' + t] || 0) < 2 && s.round % 3 === 0) return { id, target: t };
+    if (legal('cover', null)) return { id: 'cover', target: null };
+    return null;
+  }
+
+  function bluePolicy(s) {
+    const L = (id, t) => !blueCheck(s, id, t);
+    const known = Object.keys(s.blue.known).filter(n => s.blue.known[n] === 'compromised');
+    const hot = known.find(n => !s.nodes[n].isolated);
+    if (hot) {
+      if (hot === 'appdb') { if (L('egress', null) && !s.blue.egress) return { id: 'egress', target: null }; if (L('dlp', null) && !s.blue.dlp) return { id: 'dlp', target: null }; }
+      if (L('isolate', hot)) return { id: 'isolate', target: hot };
+    }
+    const iso = known.find(n => s.nodes[n].isolated);
+    if (iso && L('restore', iso)) return { id: 'restore', target: iso };
+    const pending = s.evidence.filter(e => e.visible && e.status === 'new' && CONF_RANK[e.conf] >= 2)
+      .sort((a, b) => CONF_RANK[b.conf] - CONF_RANK[a.conf] || b.id - a.id);
+    if (pending.length && L('triage', pending[0].at)) return { id: 'triage', target: pending[0].at };
+    const seen = new Set(s.evidence.filter(e => e.visible && e.real).map(e => e.tag));
+    const react = [
+      [seen.has('recon') || seen.has('webexploit_fail') || seen.has('webexploit'), 'patch', 'web'],
+      [seen.has('phish') || seen.has('phish_fail'), 'training', null],
+      [seen.has('phish') || seen.has('creds'), 'mfa', null],
+      [seen.has('webexploit') || seen.has('creds'), 'leastpriv', null],
+      [seen.has('lateral') || seen.has('phish'), 'segment', null],
+      [seen.has('dbaccess') || seen.has('creds'), 'egress', null],
+      [seen.has('dbaccess') || seen.has('creds'), 'dlp', null],
+    ];
+    for (const [cond, id, t] of react) if (cond && L(id, t)) return { id, target: t };
+    const proactive = [['sensor', 'appdb'], ['patch', 'web'], ['sensor', 'userpc'], ['mfa', null], ['leastpriv', null], ['egress', null]];
+    for (const [id, t] of proactive) if (L(id, t)) return { id, target: t };
+    return { id: 'pass', target: null };
+  }
+
+  function passPolicy() { return { id: 'pass', target: null }; }
+
+  /* Run a full game under two policies (red policy may return null → ends with no action). */
+  function simulate(redP, blueP, maxSteps) {
+    let s = newGame(), guard = 0;
+    while (!s.ended && guard++ < (maxSteps || 100)) {
+      if (s.phase === 'red') {
+        const m = redP(s); const r = m ? redAct(s, m.id, m.target) : { ok: false };
+        if (!r.ok) throw new Error('Red policy produced invalid action ' + JSON.stringify(m) + ': ' + (r.error || 'none'));
+        s = r.state;
+      } else if (s.phase === 'blue') {
+        const m = blueP(s); const r = blueAct(s, m.id, m.target);
+        if (!r.ok) throw new Error('Blue policy produced invalid action ' + JSON.stringify(m) + ': ' + r.error);
+        s = r.state;
+      }
+    }
+    return s;
+  }
+
+  return { ROUNDS, RED_BUDGET, BLUE_BUDGET, OUTAGE_LIMIT, NODES, EDGES, RED, BLUE, newGame, listOptions, redAct, blueAct, blueView,
+           scores, report, redPolicy, bluePolicy, passPolicy, simulate, foothold };
+}));
+
+</script>
+<script>
+(function () {
+  'use strict';
+  const C = CyberCore;
+  let G = null, MODE = null, PERSP = 'umpire', focus = null, last = null, busy = false;
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const NAME = n => C.NODES[n].label;
+
+  const POS = { internet: [320, 38], firewall: [320, 120], switch: [320, 205], web: [120, 310], userpc: [320, 310], server: [520, 310], appdb: [120, 430], backup: [520, 430] };
+  const W = 150, H = 54;
+
+  function controls(phase) { return MODE === 'both' || MODE === phase; }
+
+  /* ── flow ── */
+  function start(mode) {
+    G = C.newGame(); MODE = mode; focus = null; last = null; busy = false;
+    PERSP = mode === 'both' ? 'umpire' : mode;
+    $('ov-start').classList.remove('show'); $('ov-report').classList.remove('show');
+    fillPersp(); render(); maybeAI();
+  }
+
+  function act(id, target) {
+    if (busy || !G || G.ended || !controls(G.phase)) return;
+    const side = G.phase;
+    const r = side === 'red' ? C.redAct(G, id, target) : C.blueAct(G, id, target);
+    if (!r.ok) { last = { side, ok: false, text: 'Rejected: ' + r.error }; render(); return; }
+    G = r.state; focus = null;
+    last = side === 'red' ? { side, ok: r.success, text: (r.success ? 'SUCCESS — ' : 'FAILED — ') + r.explain }
+                          : { side, ok: true, text: r.note };
+    render(); maybeAI();
+  }
+
+  function maybeAI() {
+    if (!G || G.ended) { if (G && G.ended) showReport(); return; }
+    if (controls(G.phase)) return;
+    busy = true; render();
+    setTimeout(() => {
+      const m = G.phase === 'red' ? C.redPolicy(G) : C.bluePolicy(G);
+      const r = G.phase === 'red' ? C.redAct(G, m.id, m.target) : C.blueAct(G, m.id, m.target);
+      if (r.ok) G = r.state;
+      busy = false; last = null; render(); maybeAI();
+    }, 600);
+  }
+
+  /* ── view helpers ── */
+  function fillPersp() {
+    const opts = MODE === 'both' ? [['umpire', 'Umpire (everything)'], ['red', 'Red view'], ['blue', 'Blue view']]
+      : [[MODE, MODE === 'red' ? 'Red view' : 'Blue view'], ['umpire', 'Umpire (spoilers)']];
+    $('persp').innerHTML = opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('');
+    $('persp').value = PERSP;
+  }
+
+  function nodeStatus(n) {
+    const real = G.nodes[n], bv = C.blueView(G)[n];
+    const red = () => (real && C.foothold(G, n)) ? ['FOOTHOLD', 'red'] : (n === 'firewall' && G.red.recon ? ['MAPPED', 'purple'] : null);
+    const blue = () => ({ unknown: ['not assessed', 'grey'], suspect: ['SUSPECT', 'ochre'], watch: ['low-level alert', 'ochre'],
+      compromised: ['COMPROMISED', 'red'], clean: ['VERIFIED CLEAN', 'green'], isolated: ['ISOLATED', 'blue'] }[bv]);
+    if (n === 'internet') return ['external', 'ext'];
+    if (PERSP === 'red') return red() || ['—', 'grey'];
+    if (PERSP === 'blue') return blue();
+    // umpire: truth first, then Blue's belief
+    const truth = real && real.compromised ? (real.isolated ? 'contained' : 'RED FOOTHOLD') : null;
+    const b = blue();
+    if (truth) return [truth + ' · Blue: ' + (bv === 'compromised' || bv === 'isolated' ? 'knows' : bv === 'suspect' || bv === 'watch' ? 'suspects' : 'unaware'), real.isolated ? 'blue' : 'red'];
+    return [b[0] === 'not assessed' ? 'clean (unverified)' : b[0], b[1] === 'grey' ? 'grey' : b[1]];
+  }
+
+  function renderTopo() {
+    const edges = C.EDGES.map(([a, b]) => `<line class="edge" x1="${POS[a][0]}" y1="${POS[a][1] + H / 2}" x2="${POS[b][0]}" y2="${POS[b][1] - H / 2 + 8}"/>`).join('');
+    const nodes = Object.keys(C.NODES).map(n => {
+      const [x, y] = POS[n], st = nodeStatus(n);
+      const mon = (PERSP !== 'red') && G.sensors[n] ? 'MONITORED' : (PERSP !== 'red' && (n === 'userpc' || n === 'appdb') ? 'no monitoring' : '');
+      const cls = 'node s-' + st[1] + (focus === n ? ' focus' : '');
+      return `<g class="${cls}" data-n="${n}" tabindex="0" role="button" aria-pressed="${focus === n}" aria-label="${esc(NAME(n))}: ${esc(st[0])}${mon ? ', ' + mon : ''}. Press to show actions for this node.">
+        <rect x="${x - W / 2}" y="${y - H / 2}" width="${W}" height="${H}"/>
+        <text x="${x}" y="${y - 6}">${esc(NAME(n))}</text>
+        <text class="st" x="${x}" y="${y + 9}">${esc(st[0])}</text>
+        ${mon ? `<text class="mon" x="${x}" y="${y + 22}">${mon}</text>` : ''}
+      </g>`;
+    }).join('');
+    $('topo').innerHTML = edges + nodes;
+    $('topo').querySelectorAll('.node').forEach(g => {
+      const n = g.getAttribute('data-n');
+      g.addEventListener('click', () => { focus = focus === n ? null : n; render(); });
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focus = focus === n ? null : n; render(); const f = $('topo').querySelector('[data-n="' + n + '"]'); if (f) f.focus(); } });
+    });
+    $('topo-hint').textContent = ' — select a node to filter actions';
+  }
+
+  function meter(label, val, max, col, fmt) {
+    return `<div class="meter"><div class="lbl"><span>${label}</span><b>${fmt || val}</b></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, val / max * 100))}%;background:var(--${col})"></i></div></div>`;
+  }
+  function renderMeters() {
+    let h = '';
+    if (PERSP !== 'blue') h += meter('Red budget', G.red.budget, C.RED_BUDGET, 'red', G.red.budget + ' / ' + C.RED_BUDGET) + meter('Red stealth', G.red.stealth, 100, 'purple', G.red.stealth + '%');
+    if (PERSP !== 'red') h += meter('Blue budget', G.blue.budget, C.BLUE_BUDGET, 'blue', G.blue.budget + ' / ' + C.BLUE_BUDGET) + meter('Shop availability', G.blue.availability, 100, G.blue.availability < 50 ? 'ochre' : 'green', G.blue.availability + '% (loss <' + C.OUTAGE_LIMIT + '%)');
+    h += meter('Round', G.round, C.ROUNDS, 'ochre', G.round + ' / ' + C.ROUNDS);
+    $('meters').innerHTML = h;
+  }
+
+  function renderHeader() {
+    $('h-round').textContent = 'Round ' + G.round + '/' + C.ROUNDS;
+    const p = $('h-phase');
+    if (G.ended) { p.className = 'chip ' + (G.ended.winner === 'red' ? 'red' : 'blue'); p.textContent = (G.ended.winner === 'red' ? 'RED' : 'BLUE') + ' WON'; }
+    else { p.className = 'chip ' + (G.phase === 'red' ? 'red' : 'blue'); p.textContent = (G.phase === 'red' ? 'Red' : 'Blue') + ' to act' + (busy ? ' (AI thinking…)' : ''); }
+  }
+
+  function renderActions() {
+    const side = G.phase === 'ended' ? (MODE === 'both' ? 'red' : MODE) : G.phase;
+    const panelSide = MODE === 'both' ? (G.phase === 'ended' ? 'red' : G.phase) : MODE;
+    const h = $('act-h'); h.className = 'ph ' + panelSide;
+    h.textContent = (panelSide === 'red' ? 'Red operations' : 'Blue response') + (G.ended ? ' — scenario over' : '');
+    let html = '';
+    if (last) html += `<div class="result ${last.ok ? 'ok' : 'fail'}" role="status"><b>${last.ok ? '' : '⚠ '}</b>${esc(last.text)}</div>`;
+    if (G.ended) {
+      html += `<p class="waiting">The scenario has ended.</p><div class="btnrow"><button class="btn primary" id="b-rep" type="button">View after-action report</button><button class="btn" id="b-again" type="button">Replay</button></div>`;
+      $('act-b').innerHTML = html; return;
+    }
+    if (!controls(G.phase)) {
+      html += `<p class="waiting" role="status">${busy ? 'The AI ' + (G.phase === 'red' ? 'adversary' : 'analyst') + ' is deciding…' : 'Waiting for the other side.'}</p>`;
+      $('act-b').innerHTML = html; return;
+    }
+    const opts = C.listOptions(G, G.phase).filter(o => !focus || o.target === focus || o.target === null);
+    if (focus) html += `<div class="focus-note">Showing actions for <b>${esc(NAME(focus))}</b> and network-wide actions. <button class="btn" id="b-clear" type="button" style="padding:2px 8px">Show all</button></div>`;
+    html += '<div class="opt-list">' + (opts.length ? opts.map((o, i) => {
+      const lbl = esc(o.label) + (o.target ? ' → ' + esc(NAME(o.target)) : '');
+      return `<button type="button" class="opt ${G.phase}" data-i="${i}" ${o.legal ? '' : 'disabled'} aria-label="${lbl}, cost ${o.cost}${o.legal ? '' : '. Unavailable: ' + esc(o.reason)}">
+        <span class="t"><span>${lbl}</span><span class="cost">cost ${o.cost}</span></span>
+        <span class="d">${esc(o.desc)}</span>${o.attck ? `<span class="att">Inspired by ${esc(o.attck)}</span>` : ''}
+        ${o.legal ? '' : `<div class="why">✕ ${esc(o.reason)}</div>`}</button>`;
+    }).join('') : '<p class="empty">No actions for this node.</p>') + '</div>';
+    $('act-b').innerHTML = html;
+    $('act-b').querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { const o = opts[+b.getAttribute('data-i')]; act(o.id, o.target); }));
+    const clr = $('b-clear'); if (clr) clr.addEventListener('click', () => { focus = null; render(); });
+  }
+
+  function renderInfo() {
+    const h = $('info-h'), b = $('info-b');
+    if (PERSP === 'red') {
+      h.className = 'ph purple'; h.textContent = 'Attack progress (your intel)';
+      const st = G.stats;
+      const steps = [['Perimeter mapped', G.red.recon], ['Foothold gained', st.everFoothold], ['Database credentials', G.red.dbCreds || st.everDbCreds],
+        ['Database access', st.everDbAccess], ['Backups destroyed', st.everBackups], ['OBJECTIVE: data exfiltrated', G.red.exfil]];
+      b.innerHTML = '<ul class="chain">' + steps.map(s => `<li class="${s[1] ? 'done' : 'todo'}">${s[1] ? '✔' : '○'} ${s[0]}</li>`).join('') + '</ul>' +
+        '<p class="note">You cannot see Blue\'s alerts. Failed actions tell you which defence stopped you — adapt your route.</p>';
+      return;
+    }
+    h.className = 'ph ochre'; h.textContent = 'Alerts and evidence';
+    const evs = G.evidence.filter(e => e.visible).slice().reverse();
+    const canAct = G.phase === 'blue' && controls('blue') && !G.ended;
+    b.innerHTML = (evs.length ? evs.map(e => {
+      const stl = { new: 'PENDING — needs analysis', malicious: 'CONFIRMED MALICIOUS', benign: 'DISMISSED — benign' }[e.status];
+      const can = canAct && e.status === 'new' && G.blue.budget >= 1;
+      return `<div class="ev ${e.status}"><div class="meta"><span>Round ${e.round}</span><span class="chip ${e.conf === 'high' ? 'red' : e.conf === 'medium' ? 'ochre' : 'blue'}" style="padding:0 6px">${e.conf.toUpperCase()}</span><span>${esc(NAME(e.at))}</span><span class="st">${stl}</span></div>
+        ${esc(e.text)}${e.status === 'new' ? '' : ''}
+        ${e.status === 'new' ? `<div><button type="button" data-ev="${e.at}" ${can ? '' : 'disabled'}>Investigate ${esc(NAME(e.at))} (cost 1)</button></div>` : ''}
+        ${e.status === 'benign' && e.truth ? `<div class="note" style="color:#b5e4b7">Analysis: ${esc(e.truth)}</div>` : ''}</div>`;
+    }).join('') : '<p class="empty">No alerts yet. Silence is not safety: unmonitored systems raise no alerts.</p>') +
+      (PERSP === 'umpire' ? hiddenSummary() : '');
+    b.querySelectorAll('button[data-ev]').forEach(x => x.addEventListener('click', () => act('triage', x.getAttribute('data-ev'))));
+  }
+  function hiddenSummary() {
+    const hid = G.evidence.filter(e => !e.visible);
+    return hid.length ? `<div class="lessons-h">Umpire only — ${hid.length} unseen item(s)</div>` + hid.map(e => `<div class="note">Round ${e.round}: ${esc(e.text)} <i>(${esc(e.why)})</i></div>`).join('') : '';
+  }
+
+  function renderLog() {
+    const rows = G.log.filter(l => l.vis.indexOf(PERSP) >= 0);
+    $('log').innerHTML = rows.slice().reverse().map(l => {
+      const tag = { red: 'RED', blue: 'BLUE', evidence: 'ALERT', system: 'SYSTEM' }[l.side];
+      return `<li class="${l.side}"><span class="rd">R${l.round}</span><span class="tag">${tag}</span>${esc(l.text.replace(/^(RED|BLUE): /, '').replace(/^ALERT /, ''))}</li>`;
+    }).join('');
+  }
+
+  function render() {
+    if (!G) return;
+    renderHeader(); renderTopo(); renderMeters(); renderActions(); renderInfo(); renderLog();
+    const rb = $('b-rep'); if (rb) rb.addEventListener('click', showReport);
+    const ag = $('b-again'); if (ag) ag.addEventListener('click', () => start(MODE));
+  }
+
+  function showReport() {
+    const R = C.report(G), won = R.ended.winner;
+    const tbl = (name, sc, cls) => `<table><caption style="color:var(--${cls})">${name} — ${sc.total} pts</caption>` + sc.parts.map(p => `<tr><td>${esc(p[0])}</td><td>${p[1] >= 0 ? '+' : ''}${p[1]}</td></tr>`).join('') + `<tr class="tot"><td>Total</td><td>${sc.total}</td></tr></table>`;
+    $('report').innerHTML = `<h2 id="rep-h">After-action report</h2>
+      <div class="banner ${won}"><h3>${won === 'red' ? '🟥 RED WINS' : '🟦 BLUE WINS'} — round ${R.ended.round}</h3><div>${esc(R.ended.reason)}</div></div>
+      <div class="scores">${tbl('Red', R.scores.red, 'red')}${tbl('Blue', R.scores.blue, 'blue')}</div>
+      <div class="lessons-h">Analysis: what this scenario teaches</div>
+      <ul class="lessons">${R.lessons.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+      ${R.missedEvidence.length ? `<div class="lessons-h">Activity Blue never saw</div><ul class="lessons">${R.missedEvidence.map(m => `<li>Round ${m.round}: ${esc(m.text)} <i>(${esc(m.why)})</i></li>`).join('')}</ul>` : ''}
+      <div class="lessons-h">Full timeline</div>
+      <ul class="log" style="max-height:240px">${R.timeline.map(l => `<li class="${l.side}"><span class="rd">R${l.round}</span>${esc(l.text)}</li>`).join('')}</ul>
+      <div class="btnrow"><button class="btn primary" id="r-again" type="button">Replay same mode</button><button class="btn" id="r-new" type="button">Choose another mode</button><button class="btn" id="r-close" type="button">Close</button></div>
+      <p class="note">Scores are a deterministic function of the game state: replaying the same moves gives the same result.</p>`;
+    $('ov-report').classList.add('show');
+    $('r-again').addEventListener('click', () => start(MODE));
+    $('r-new').addEventListener('click', () => { $('ov-report').classList.remove('show'); $('ov-start').classList.add('show'); });
+    $('r-close').addEventListener('click', () => { $('ov-report').classList.remove('show'); render(); });
+    $('r-again').focus();
+  }
+
+  /* ── wiring ── */
+  document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => start(b.getAttribute('data-mode'))));
+  $('b-new').addEventListener('click', () => { $('ov-report').classList.remove('show'); $('ov-start').classList.add('show'); });
+  $('persp').addEventListener('change', e => { PERSP = e.target.value; render(); });
+  window.__game = { get state() { return G; }, get mode() { return MODE; }, start, act };
+})();
+</script>
+</body>
+</html>

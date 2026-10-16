@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpFarm — MVP Dashboard</title>
+<style>
+  :root {
+    --col-bg:       #1a1f1a;
+    --col-panel:    #232b23;
+    --col-border:   #2e3a2e;
+    --col-header:   #111711;
+    --col-text:     #d4e0d4;
+    --col-muted:    #7a9178;
+    --col-green:    #4caf50;
+    --col-green-dk: #2e7031;
+    --col-blue:     #4a9eca;
+    --col-blue-dk:  #1e5f82;
+    --col-brown:    #a07850;
+    --col-brown-dk: #5c3d1e;
+    --col-gold:     #e8c24a;
+    --col-gold-dk:  #7a5e10;
+    --col-red:      #e05a3a;
+    --col-red-dk:   #7a2810;
+    --col-slate:    #3a4a3a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--col-bg);
+    color: var(--col-text);
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--col-header);
+    border-bottom: 2px solid var(--col-green-dk);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--col-green);
+    letter-spacing: 1px;
+  }
+  header .subtitle {
+    color: var(--col-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  #day-counter {
+    margin-left: auto;
+    background: var(--col-slate);
+    border: 1px solid var(--col-green-dk);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--col-green);
+  }
+
+  /* ── Layout ── */
+  .page-scroll {
+    overflow-x: auto;
+    flex: 1;
+  }
+  .main-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(240px, 1fr) 220px;
+    grid-template-rows: auto auto;
+    gap: 8px;
+    padding: 10px;
+    min-width: 760px;
+  }
+
+  /* ── Panels ── */
+  .panel {
+    background: var(--col-panel);
+    border: 1px solid var(--col-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .panel-body { padding: 10px 12px; }
+
+  /* colour-coded panel headers */
+  .ph-green  { background: var(--col-green-dk);  color: #a8e6a8; }
+  .ph-blue   { background: var(--col-blue-dk);   color: #a8d4e8; }
+  .ph-brown  { background: var(--col-brown-dk);  color: #d4b888; }
+  .ph-gold   { background: var(--col-gold-dk);   color: #f0dca0; }
+  .ph-red    { background: var(--col-red-dk);    color: #f0a898; }
+  .ph-slate  { background: var(--col-slate);     color: #b0c0b0; }
+
+  /* ── Grid layout assignments ── */
+  #panel-map      { grid-column: 1; grid-row: 1 / 3; }
+  #panel-ecology  { grid-column: 2; grid-row: 1; }
+  #panel-aqua     { grid-column: 3; grid-row: 1; }
+  #panel-farm     { grid-column: 2; grid-row: 2; }
+  #panel-market   { grid-column: 3; grid-row: 2; }
+
+  /* ── Bottom strip ── */
+  .bottom-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 10px 10px;
+    min-width: 760px;
+  }
+  #panel-events { }
+  #panel-loop   { }
+
+  /* ── Property map ── */
+  .map-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .tile {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .tile:hover { border-color: var(--col-text); }
+  .tile .tile-label {
+    font-size: 8px;
+    text-align: center;
+    margin-top: 2px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.1;
+  }
+  .tile-homestead   { background: #3a3028; }
+  .tile-veg         { background: #2a4020; }
+  .tile-orchard     { background: #1e3618; }
+  .tile-pond        { background: #1a2e40; }
+  .tile-pasture     { background: #2e4a20; }
+  .tile-stall       { background: #4a3a10; }
+  .tile-compost     { background: #3a2810; }
+  .tile-water       { background: #1a3048; }
+  .tile-empty       { background: #222a22; border-color: #2a342a; }
+
+  .tile.selected { border-color: var(--col-gold) !important; }
+
+  /* ── Tile info tooltip ── */
+  #tile-info {
+    margin-top: 8px;
+    background: var(--col-slate);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--col-muted);
+    min-height: 36px;
+  }
+  #tile-info strong { color: var(--col-text); }
+
+  /* ── Stats / metrics ── */
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .stat-label { color: var(--col-muted); font-size: 11px; }
+  .stat-value { font-weight: 600; font-size: 12px; }
+  .stat-bar-wrap {
+    flex: 1;
+    margin: 0 8px;
+    background: #1a221a;
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .stat-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .bar-green  { background: var(--col-green); }
+  .bar-blue   { background: var(--col-blue); }
+  .bar-brown  { background: var(--col-brown); }
+  .bar-gold   { background: var(--col-gold); }
+  .bar-red    { background: var(--col-red); }
+
+  /* ── Events list ── */
+  .event-list { list-style: none; }
+  .event-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--col-border);
+    font-size: 11px;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .event-day { color: var(--col-muted); min-width: 36px; }
+  .event-text { flex: 1; }
+
+  /* ── Simulation loop ── */
+  .loop-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    margin-bottom: 10px;
+  }
+  .loop-step {
+    background: var(--col-slate);
+    border: 1px solid var(--col-border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    text-align: center;
+    flex: 1;
+    min-width: 70px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--col-muted);
+  }
+  .loop-step.active { border-color: var(--col-green); color: var(--col-green); }
+  .loop-arrow { color: var(--col-muted); font-size: 10px; flex-shrink: 0; }
+  .loop-map {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    font-size: 11px;
+  }
+  .loop-map dt { color: var(--col-muted); font-weight: 600; }
+  .loop-map dd { color: var(--col-text); margin-bottom: 3px; }
+
+  /* ── Action buttons ── */
+  .action-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--col-header);
+    border-top: 1px solid var(--col-border);
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 7px 14px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.3px;
+  }
+  .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); opacity: 0.7; }
+  .btn-advance { background: var(--col-green);    color: #0a160a; border-color: var(--col-green-dk); }
+  .btn-market  { background: var(--col-gold);     color: #1a0e00; border-color: var(--col-gold-dk); }
+  .btn-rain    { background: var(--col-blue);     color: #04111e; border-color: var(--col-blue-dk); }
+  .btn-pond    { background: var(--col-blue-dk);  color: #a8d4e8; border-color: var(--col-blue); }
+  .btn-harvest { background: var(--col-brown);    color: #1a0c00; border-color: var(--col-brown-dk); }
+  .btn-reset   { background: var(--col-slate);    color: var(--col-text); border-color: var(--col-border); }
+
+  /* ── Notification flash ── */
+  #notif {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--col-green-dk);
+    border: 1px solid var(--col-green);
+    color: #d4f4d4;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  #notif.show { opacity: 1; }
+
+  /* ── Inline two-col layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+
+  /* scrollable event list */
+  .event-scroll { max-height: 120px; overflow-y: auto; }
+
+  /* ── Phase 2: save status, banner, operations journal ── */
+  #save-status {
+    font-size: 11px;
+    color: var(--col-muted);
+    border: 1px solid var(--col-border);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+  #save-status.ok   { color: var(--col-green); border-color: var(--col-green-dk); }
+  #save-status.warn { color: #f0a898; border-color: var(--col-red); }
+  #banner {
+    margin: 8px 10px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--col-gold);
+    background: var(--col-gold-dk);
+    color: #f6e9bd;
+    font-size: 12px;
+    display: none;
+  }
+  #banner.show { display: flex; gap: 12px; align-items: flex-start; }
+  #banner.error { border-color: var(--col-red); background: var(--col-red-dk); color: #f6d0c6; }
+  #banner ul { margin: 4px 0 0 16px; }
+  #banner .banner-text { flex: 1; }
+  #banner button { background: none; border: 1px solid currentColor; color: inherit; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 11px; }
+
+  .ops-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 8px;
+    padding: 0 10px 10px;
+  }
+  .j-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  .j-field { display: flex; flex-direction: column; gap: 2px; }
+  .j-field.wide { grid-column: 1 / -1; }
+  .j-field label { font-size: 11px; color: var(--col-muted); font-weight: 600; }
+  .j-field input, .j-field select, .j-filter select {
+    background: var(--col-bg); color: var(--col-text);
+    border: 1px solid var(--col-border); border-radius: 4px;
+    padding: 5px 6px; font: inherit; font-size: 12px; min-width: 0;
+  }
+  .j-field input[aria-invalid="true"], .j-field select[aria-invalid="true"] { border-color: var(--col-red); }
+  .j-error { color: #f0a898; font-size: 11px; min-height: 0; }
+  .j-form-error { color: #f0a898; font-size: 12px; margin-bottom: 6px; }
+  .j-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .j-filter { display: flex; gap: 8px; align-items: center; margin: 10px 0 6px; font-size: 11px; color: var(--col-muted); }
+  .j-list { list-style: none; max-height: 260px; overflow-y: auto; }
+  .j-item { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--col-border); font-size: 12px; flex-wrap: wrap; }
+  .j-item:last-child { border-bottom: none; }
+  .j-day { color: var(--col-muted); min-width: 44px; }
+  .j-type { font-weight: 700; min-width: 86px; }
+  .j-type.src-sim { color: var(--col-blue); }
+  .j-meta { flex: 1; min-width: 140px; }
+  .j-tag { font-size: 10px; color: var(--col-muted); border: 1px solid var(--col-border); border-radius: 3px; padding: 0 4px; }
+  .j-item button, .btn-sm {
+    background: var(--col-slate); color: var(--col-text);
+    border: 1px solid var(--col-border); border-radius: 4px;
+    padding: 2px 8px; font-size: 11px; cursor: pointer;
+  }
+  .j-item button:hover, .btn-sm:hover { border-color: var(--col-green); }
+  .j-empty { color: var(--col-muted); padding: 10px 0; font-size: 12px; }
+  .sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 8px; }
+  .sum-item .k { color: var(--col-muted); font-size: 11px; }
+  .sum-item .v { font-weight: 700; font-size: 14px; }
+  .alert-list { list-style: none; margin-bottom: 8px; }
+  .alert-list li { font-size: 12px; padding: 3px 0 3px 8px; border-left: 3px solid var(--col-border); margin-bottom: 3px; }
+  .alert-list li.red  { border-left-color: var(--col-red); }
+  .alert-list li.gold { border-left-color: var(--col-gold); }
+  .alert-list li.green{ border-left-color: var(--col-green); }
+  .spark-wrap { margin-top: 4px; }
+  .spark-wrap svg { width: 100%; height: 48px; display: block; }
+  .tile:focus-visible, .btn:focus-visible, .j-field input:focus-visible, .j-field select:focus-visible,
+  .j-item button:focus-visible, .btn-sm:focus-visible, .j-filter select:focus-visible { outline: 2px solid var(--col-gold); outline-offset: 1px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ── Narrow screens: stack panels instead of side-scrolling ── */
+  @media (max-width: 800px) {
+    .main-layout { grid-template-columns: 1fr; grid-template-rows: none; min-width: 0; }
+    .main-layout > .panel { grid-column: 1 !important; grid-row: auto !important; }
+    .bottom-strip, .ops-strip { grid-template-columns: 1fr; min-width: 0; }
+    header { flex-wrap: wrap; padding: 10px; }
+    #day-counter { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>&#127807; UpFarm</h1>
+    <div class="subtitle">Business Ecology Simulator · Farm &amp; Aquaculture Vertical (v1)</div>
+  </div>
+  <div id="day-counter">Day 1</div>
+  <div id="save-status" role="status" aria-live="polite">Not saved yet</div>
+</header>
+
+<div id="banner" role="alert"></div>
+
+<!-- ── Scrollable content area ── -->
+<div class="page-scroll">
+
+<!-- ── Main grid ── -->
+<div class="main-layout">
+
+  <!-- Property Map -->
+  <div class="panel" id="panel-map">
+    <div class="panel-header ph-brown">&#127968; Property Map</div>
+    <div class="panel-body">
+      <div class="map-grid" id="map-grid"></div>
+      <div id="tile-info">Click a tile to inspect it.</div>
+    </div>
+  </div>
+
+  <!-- Ecology Loop -->
+  <div class="panel" id="panel-ecology">
+    <div class="panel-header ph-green">&#127807; Ecology Loop</div>
+    <div class="panel-body two-col" id="ecology-body"></div>
+  </div>
+
+  <!-- Aquaculture Loop -->
+  <div class="panel" id="panel-aqua">
+    <div class="panel-header ph-blue">&#128031; Aquaculture</div>
+    <div class="panel-body" id="aqua-body"></div>
+  </div>
+
+  <!-- Farm Production Loop -->
+  <div class="panel" id="panel-farm">
+    <div class="panel-header ph-green">&#127807; Farm Production</div>
+    <div class="panel-body two-col" id="farm-body"></div>
+  </div>
+
+  <!-- Market / Business Loop -->
+  <div class="panel" id="panel-market">
+    <div class="panel-header ph-gold">&#127981; Market &amp; Business</div>
+    <div class="panel-body" id="market-body"></div>
+  </div>
+
+</div>
+
+<!-- ── Bottom strip ── -->
+<div class="bottom-strip">
+
+  <!-- Events -->
+  <div class="panel" id="panel-events">
+    <div class="panel-header ph-red">&#9888; Events</div>
+    <div class="panel-body">
+      <ul class="event-list event-scroll" id="event-list"></ul>
+    </div>
+  </div>
+
+  <!-- Simulation Loop -->
+  <div class="panel" id="panel-loop">
+    <div class="panel-header ph-slate">&#9654; Simulation Loop</div>
+    <div class="panel-body">
+      <div class="loop-diagram" id="loop-diagram"></div>
+      <dl class="loop-map">
+        <dt>Observe</dt><dd>Inspect soil, water, stock, demand</dd>
+        <dt>Decide</dt><dd>Choose farm / ecology / business action</dd>
+        <dt>Act</dt>   <dd>Plant, feed, harvest, sell, improve</dd>
+        <dt>Feedback</dt><dd>Ecology + money + reputation changes</dd>
+        <dt>Learn</dt> <dd>Refine the farm model</dd>
+      </dl>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Operations journal + summary ── -->
+<div class="ops-strip">
+
+  <div class="panel" id="panel-journal">
+    <div class="panel-header ph-brown">&#128211; Operations Journal</div>
+    <div class="panel-body">
+      <p id="j-help" style="color:var(--col-muted);font-size:11px;margin-bottom:8px">
+        Record what was actually done on the farm. Records are saved in this browser and do not change the simulation.
+      </p>
+      <form id="j-form" novalidate aria-describedby="j-help">
+        <div id="j-form-error" class="j-form-error" role="alert"></div>
+        <div class="j-form">
+          <div class="j-field"><label for="j-day">Day</label>
+            <input id="j-day" name="day" type="number" min="1" step="1" inputmode="numeric" aria-describedby="e-day">
+            <div class="j-error" id="e-day"></div></div>
+          <div class="j-field"><label for="j-type">Operation</label>
+            <select id="j-type" name="type" aria-describedby="e-type"></select>
+            <div class="j-error" id="e-type"></div></div>
+          <div class="j-field"><label for="j-zone">Zone</label>
+            <select id="j-zone" name="zone" aria-describedby="e-zone"></select>
+            <div class="j-error" id="e-zone"></div></div>
+          <div class="j-field"><label for="j-qty">Quantity (units)</label>
+            <input id="j-qty" name="quantity" type="number" min="0" max="1000" step="any" inputmode="decimal" aria-describedby="e-quantity">
+            <div class="j-error" id="e-quantity"></div></div>
+          <div class="j-field"><label for="j-value">Value ($, sales/repairs)</label>
+            <input id="j-value" name="value" type="number" min="0" max="9999" step="any" inputmode="decimal" aria-describedby="e-value">
+            <div class="j-error" id="e-value"></div></div>
+          <div class="j-field wide"><label for="j-note">Note (max 200)</label>
+            <input id="j-note" name="note" type="text" maxlength="260" autocomplete="off" aria-describedby="e-note">
+            <div class="j-error" id="e-note"></div></div>
+        </div>
+        <div class="j-actions">
+          <button type="submit" class="btn btn-advance" id="j-submit">+ Add record</button>
+          <button type="button" class="btn btn-reset" id="j-cancel" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <div class="j-filter">
+        <label for="j-filter-type">Show</label>
+        <select id="j-filter-type"></select>
+        <span id="j-count" aria-live="polite"></span>
+      </div>
+      <ul class="j-list" id="j-list"></ul>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-summary">
+    <div class="panel-header ph-gold">&#128202; Operations Summary</div>
+    <div class="panel-body" id="summary-body"></div>
+  </div>
+
+</div>
+
+</div><!-- end .page-scroll -->
+
+<!-- ── Action buttons ── -->
+<div class="action-bar">
+  <button class="btn btn-advance" onclick="advanceDay()">&#9654; Advance Day</button>
+  <button class="btn btn-market"  onclick="runMarketDay()">&#127981; Run Market Day</button>
+  <button class="btn btn-rain"    onclick="simulateRain()">&#127783; Simulate Rain</button>
+  <button class="btn btn-pond"    onclick="inspectPond()">&#128031; Inspect Pond</button>
+  <button class="btn btn-harvest" onclick="harvestProduce()">&#127807; Harvest Produce</button>
+  <button class="btn btn-reset"   onclick="exportSave()">&#8681; Export JSON</button>
+  <button class="btn btn-reset"   onclick="document.getElementById('import-file').click()">&#8679; Import JSON</button>
+  <button class="btn btn-reset"   onclick="resetDemo()">&#8635; Reset Demo</button>
+  <input type="file" id="import-file" accept="application/json,.json" class="sr-only" tabindex="-1" aria-label="Import UpFarm save file">
+</div>
+
+<div id="notif" role="status" aria-live="polite"></div>
+
+<script>
+/* UpFarm core — Phase 2 domain logic: operations journal, validation, summary, persistence.
+ * Presentation-free. Loads as a plain <script> (window.UpFarmCore) or via require() in Node tests.
+ * Journal entries are RECORDS (observation layer). They never drive actuators or sim state.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.UpFarmCore = factory();
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SCHEMA_VERSION = 2;
+  const APP_ID = 'UpFarm';
+  const STORAGE_KEY = 'upfarm.save.v2';
+  const CORRUPT_KEY = 'upfarm.save.v2.corrupt';
+  const MAX_JOURNAL = 500;
+  const MAX_HISTORY = 120;
+  const MAX_EVENTS = 20;
+  const MAX_NOTE = 200;
+  const MAX_FILE_BYTES = 1024 * 1024;
+  const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
+  const EVENT_TYPES = ['green', 'blue', 'red', 'gold', 'brown'];
+
+  /* needsQty: quantity required (>0). hasValue: optional $ amount. simOnly: not offered to operator. */
+  const JOURNAL_TYPES = {
+    planting:    { label: 'Planting',    needsQty: true,  hasValue: false },
+    feeding:     { label: 'Feeding',     needsQty: true,  hasValue: false },
+    watering:    { label: 'Watering',    needsQty: true,  hasValue: false },
+    inspection:  { label: 'Inspection',  needsQty: false, hasValue: false },
+    harvest:     { label: 'Harvest',     needsQty: true,  hasValue: false },
+    sale:        { label: 'Sale',        needsQty: true,  hasValue: true  },
+    maintenance: { label: 'Maintenance', needsQty: false, hasValue: true  },
+    observation: { label: 'Observation', needsQty: false, hasValue: false, needsNote: true },
+    weather:     { label: 'Weather',     needsQty: false, hasValue: false, simOnly: true },
+  };
+  const OPERATOR_TYPES = Object.keys(JOURNAL_TYPES).filter(t => !JOURNAL_TYPES[t].simOnly);
+
+  const RANGES = {
+    day: [1, 36500], loopStep: [0, 4], pricePerKg: [0.5, 25], cashflow: [0, 9999],
+  };
+  function rangeFor(key) { return RANGES[key] || [0, 100]; }
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function seasonForDay(day) { return SEASONS[Math.floor(((day - 1) % 360) / 90)]; }
+  function cleanText(s) {
+    return String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function isNum(v) { return typeof v === 'number' && Number.isFinite(v); }
+
+  /* ── Journal entry validation ─────────────────────────────────────────────
+   * ctx: { day: current sim day, zones: [ids], skipDup?, journal?, excludeId?, allowSim? }
+   * Returns { ok, errors: {field: message}, entry } — entry is normalised, only when ok. */
+  function validateEntry(input, ctx) {
+    const errors = {};
+    const src = input || {};
+    const zones = ctx.zones || [];
+    const allowSim = !!ctx.allowSim;
+    const types = allowSim ? Object.keys(JOURNAL_TYPES) : OPERATOR_TYPES;
+
+    const type = cleanText(src.type);
+    if (!type) errors.type = 'Choose an operation type.';
+    else if (types.indexOf(type) < 0) errors.type = 'Unknown operation type.';
+    const spec = JOURNAL_TYPES[type] || {};
+
+    const dayRaw = src.day === '' || src.day == null ? NaN : Number(src.day);
+    if (!Number.isInteger(dayRaw)) errors.day = 'Day must be a whole number.';
+    else if (dayRaw < 1) errors.day = 'Day must be 1 or later.';
+    else if (dayRaw > ctx.day) errors.day = 'Day cannot be in the future (today is day ' + ctx.day + ').';
+
+    const zone = cleanText(src.zone);
+    if (!zone) errors.zone = 'Choose a zone.';
+    else if (zones.indexOf(zone) < 0) errors.zone = 'Unknown zone.';
+
+    let quantity = null;
+    const qRaw = src.quantity === '' || src.quantity == null ? null : Number(src.quantity);
+    if (spec.needsQty) {
+      if (qRaw === null || !Number.isFinite(qRaw)) errors.quantity = 'Enter a quantity (units).';
+      else if (qRaw <= 0) errors.quantity = 'Quantity must be greater than 0.';
+      else if (qRaw > 1000) errors.quantity = 'Quantity cannot exceed 1000.';
+      else quantity = round2(qRaw);
+    } else if (qRaw !== null) {
+      if (!Number.isFinite(qRaw) || qRaw < 0 || qRaw > 1000) errors.quantity = 'Quantity must be between 0 and 1000.';
+      else quantity = qRaw === 0 ? null : round2(qRaw);
+    }
+
+    let value = null;
+    const vRaw = src.value === '' || src.value == null ? null : Number(src.value);
+    if (vRaw !== null) {
+      if (!spec.hasValue && type) errors.value = 'A dollar value does not apply to ' + (spec.label || type).toLowerCase() + ' records.';
+      else if (!Number.isFinite(vRaw) || vRaw < 0 || vRaw > 9999) errors.value = 'Value must be between $0 and $9999.';
+      else value = round2(vRaw);
+    }
+
+    const note = cleanText(src.note);
+    if (note.length > MAX_NOTE) errors.note = 'Note is too long (' + note.length + '/' + MAX_NOTE + ').';
+    else if (spec.needsNote && !note) errors.note = 'Describe what you observed.';
+
+    if (Object.keys(errors).length) return { ok: false, errors };
+
+    const entry = {
+      day: dayRaw, type, zone, quantity, value, note,
+      source: allowSim && src.source === 'sim' ? 'sim' : 'operator',
+    };
+    if (!ctx.skipDup && ctx.journal && findDuplicate(ctx.journal, entry, ctx.excludeId)) {
+      return { ok: false, errors: { _form: 'This looks like a duplicate of an existing record (same day, type, zone, quantity, value and note).' } };
+    }
+    return { ok: true, errors: {}, entry };
+  }
+
+  function fingerprint(e) {
+    return [e.day, e.type, e.zone, e.quantity == null ? '' : e.quantity, e.value == null ? '' : e.value, (e.note || '').toLowerCase()].join('|');
+  }
+  function findDuplicate(journal, entry, excludeId) {
+    const fp = fingerprint(entry);
+    return (journal || []).find(e => e.source === 'operator' && e.id !== excludeId && fingerprint(e) === fp) || null;
+  }
+
+  /* ── Journal operations (pure: return new arrays) ───────────────────────── */
+  function trimJournal(journal) {
+    if (journal.length <= MAX_JOURNAL) return journal;
+    let out = journal.slice();
+    while (out.length > MAX_JOURNAL) {
+      const i = out.findIndex(e => e.source === 'sim');
+      out.splice(i >= 0 ? i : 0, 1);
+    }
+    return out;
+  }
+
+  function addEntry(journal, seq, input, ctx) {
+    const v = validateEntry(input, Object.assign({}, ctx, { journal }));
+    if (!v.ok) return { ok: false, errors: v.errors, journal, seq };
+    const entry = Object.assign({ id: seq }, v.entry, { source: 'operator' });
+    return { ok: true, errors: {}, entry, journal: trimJournal(journal.concat([entry])), seq: seq + 1 };
+  }
+
+  function updateEntry(journal, id, input, ctx) {
+    const cur = journal.find(e => e.id === id);
+    if (!cur) return { ok: false, errors: { _form: 'Record not found.' }, journal };
+    if (cur.source !== 'operator') return { ok: false, errors: { _form: 'Simulation records are read-only.' }, journal };
+    const v = validateEntry(input, Object.assign({}, ctx, { journal, excludeId: id }));
+    if (!v.ok) return { ok: false, errors: v.errors, journal };
+    const entry = Object.assign({}, v.entry, { id, source: 'operator', edited: true });
+    return { ok: true, errors: {}, entry, journal: journal.map(e => (e.id === id ? entry : e)) };
+  }
+
+  function removeEntry(journal, id) {
+    const cur = journal.find(e => e.id === id);
+    if (!cur) return { ok: false, errors: { _form: 'Record not found.' }, journal };
+    if (cur.source !== 'operator') return { ok: false, errors: { _form: 'Simulation records are read-only.' }, journal };
+    return { ok: true, errors: {}, journal: journal.filter(e => e.id !== id) };
+  }
+
+  /* System-generated record from a sim action. Never rejected for dup; capped. */
+  function recordSim(journal, seq, rec) {
+    const entry = {
+      id: seq, day: rec.day, type: rec.type, zone: rec.zone || 'homestead',
+      quantity: rec.quantity == null ? null : round2(rec.quantity),
+      value: rec.value == null ? null : round2(rec.value),
+      note: cleanText(rec.note).slice(0, MAX_NOTE), source: 'sim',
+    };
+    return { journal: trimJournal(journal.concat([entry])), seq: seq + 1 };
+  }
+
+  /* ── History snapshots (one per day, for the trend line) ───────────────── */
+  function recordSnapshot(history, s) {
+    const snap = {
+      day: s.day, cashflow: round2(s.cashflow), reputation: Math.round(s.reputation),
+      soilHealth: Math.round(s.soilHealth), pondHealth: Math.round(s.pondHealth),
+    };
+    const out = history.filter(h => h.day !== snap.day).concat([snap]).sort((a, b) => a.day - b.day);
+    return out.slice(-MAX_HISTORY);
+  }
+
+  /* ── Derived operational summary ────────────────────────────────────────── */
+  function summarise(s) {
+    const j = s.journal || [];
+    const byType = {};
+    let harvestUnits = 0, soldUnits = 0, revenue = 0, maintenanceCost = 0, operatorCount = 0, recent = 0;
+    const lastDayByType = {};
+    const lastByZone = {};
+    j.forEach(e => {
+      byType[e.type] = (byType[e.type] || 0) + 1;
+      if (e.source === 'operator') operatorCount++;
+      if (e.type === 'harvest' && e.quantity) harvestUnits += e.quantity;
+      if (e.type === 'sale') { soldUnits += e.quantity || 0; revenue += e.value || 0; }
+      if (e.type === 'maintenance') maintenanceCost += e.value || 0;
+      if (e.day > s.day - 7) recent++;
+      if (!(e.type in lastDayByType) || e.day > lastDayByType[e.type]) lastDayByType[e.type] = e.day;
+      if (!lastByZone[e.zone] || e.day >= lastByZone[e.zone].day) lastByZone[e.zone] = { day: e.day, type: e.type };
+    });
+    const daysSinceInspection = 'inspection' in lastDayByType ? s.day - lastDayByType.inspection : null;
+
+    const alerts = [];
+    if (s.feed < 25) alerts.push({ level: 'red', text: 'Feed stock is low (' + Math.round(s.feed) + '%).' });
+    if (s.pondHealth < 40) alerts.push({ level: 'red', text: 'Pond health is poor (' + Math.round(s.pondHealth) + '%).' });
+    if (s.waterQuality < 40) alerts.push({ level: 'red', text: 'Water quality is low (' + Math.round(s.waterQuality) + '%).' });
+    if (s.cashflow < 50) alerts.push({ level: 'red', text: 'Cash is low ($' + s.cashflow.toFixed(2) + ').' });
+    if (s.stallInventory === 0 && s.growing >= 30) alerts.push({ level: 'gold', text: 'Stall is empty while crops are growing — consider a harvest.' });
+    if (daysSinceInspection === null) alerts.push({ level: 'gold', text: 'No inspection recorded yet.' });
+    else if (daysSinceInspection > 7) alerts.push({ level: 'gold', text: 'Last inspection was ' + daysSinceInspection + ' days ago.' });
+
+    const hist = s.history || [];
+    let cashChange = null;
+    if (hist.length >= 2) cashChange = round2(hist[hist.length - 1].cashflow - hist[0].cashflow);
+
+    return {
+      totalRecords: j.length, operatorRecords: operatorCount, simRecords: j.length - operatorCount,
+      byType, harvestUnits: round2(harvestUnits), soldUnits: round2(soldUnits),
+      revenue: round2(revenue), maintenanceCost: round2(maintenanceCost),
+      net: round2(revenue - maintenanceCost), recent7: recent,
+      lastDayByType, lastByZone, daysSinceInspection, alerts, cashChange,
+    };
+  }
+
+  /* ── State validation (import / load) ───────────────────────────────────────
+   * defaults supplies the numeric key set and the fallback for missing keys.
+   * Present-but-wrong-type numerics are errors; out-of-range are clamped with a warning. */
+  function validateState(raw, defaults, opts) {
+    const o = opts || {};
+    const zones = o.zones || [];
+    const errors = [], warnings = [];
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ok: false, errors: ['Save data is not an object.'], warnings };
+
+    const s = JSON.parse(JSON.stringify(defaults));
+    s.events = []; s.journal = []; s.history = [];
+
+    Object.keys(defaults).forEach(k => {
+      if (typeof defaults[k] !== 'number') return;
+      if (!(k in raw)) { warnings.push('Missing "' + k + '" — default used.'); return; }
+      if (!isNum(raw[k])) { errors.push('"' + k + '" must be a finite number.'); return; }
+      const r = rangeFor(k);
+      let v = clamp(raw[k], r[0], r[1]);
+      if (v !== raw[k]) warnings.push('"' + k + '" out of range — clamped to ' + v + '.');
+      if (k === 'day' || k === 'loopStep') v = Math.round(v);
+      s[k] = v;
+    });
+    if (errors.length) return { ok: false, errors, warnings };
+
+    s.season = SEASONS.indexOf(raw.season) >= 0 ? raw.season : seasonForDay(s.day);
+    if (raw.season !== s.season) warnings.push('Season missing or invalid — derived from day.');
+
+    (Array.isArray(raw.events) ? raw.events : []).slice(-MAX_EVENTS).forEach(ev => {
+      if (!ev || !Number.isInteger(ev.day) || ev.day < 1 || typeof ev.text !== 'string') { warnings.push('An event record was invalid and dropped.'); return; }
+      s.events.push({ day: ev.day, type: EVENT_TYPES.indexOf(ev.type) >= 0 ? ev.type : 'brown', text: cleanText(ev.text).slice(0, 300) });
+    });
+
+    const ids = new Set();
+    let maxId = 0, dropped = 0;
+    (Array.isArray(raw.journal) ? raw.journal : []).forEach(e => {
+      const v = validateEntry(e, { day: s.day, zones, skipDup: true, allowSim: true });
+      const id = e && Number.isInteger(e.id) && e.id > 0 ? e.id : null;
+      if (!v.ok || id === null || ids.has(id)) { dropped++; return; }
+      ids.add(id); maxId = Math.max(maxId, id);
+      const entry = Object.assign({ id }, v.entry);
+      if (e.edited === true) entry.edited = true;
+      s.journal.push(entry);
+    });
+    if (dropped) warnings.push(dropped + ' journal record(s) were invalid and dropped.');
+    s.journal = trimJournal(s.journal);
+    s.journalSeq = Math.max(maxId + 1, Number.isInteger(raw.journalSeq) ? raw.journalSeq : 1);
+
+    (Array.isArray(raw.history) ? raw.history : []).forEach(h => {
+      if (h && Number.isInteger(h.day) && h.day >= 1 && isNum(h.cashflow) && isNum(h.reputation) && isNum(h.soilHealth) && isNum(h.pondHealth)) {
+        s.history.push({ day: h.day, cashflow: h.cashflow, reputation: h.reputation, soilHealth: h.soilHealth, pondHealth: h.pondHealth });
+      }
+    });
+    s.history = s.history.sort((a, b) => a.day - b.day).slice(-MAX_HISTORY);
+    return { ok: true, state: s, errors, warnings };
+  }
+
+  /* ── Serialisation ─────────────────────────────────────────────────────── */
+  function serialize(state, now) {
+    return JSON.stringify({ app: APP_ID, schema: SCHEMA_VERSION, savedAt: (now || new Date()).toISOString(), state }, null, 1);
+  }
+
+  function parseSave(text, defaults, opts) {
+    if (typeof text !== 'string' || !text.trim()) return { ok: false, errors: ['File is empty.'], warnings: [] };
+    if (text.length > MAX_FILE_BYTES) return { ok: false, errors: ['File is larger than 1 MB.'], warnings: [] };
+    let doc;
+    try { doc = JSON.parse(text); } catch (e) { return { ok: false, errors: ['Not valid JSON: ' + e.message], warnings: [] }; }
+    if (!doc || doc.app !== APP_ID) return { ok: false, errors: ['Not an UpFarm save file.'], warnings: [] };
+    if (!Number.isInteger(doc.schema) || doc.schema > SCHEMA_VERSION) return { ok: false, errors: ['Unsupported save schema: ' + doc.schema + '.'], warnings: [] };
+    const r = validateState(doc.state, defaults, opts);
+    if (r.ok) r.savedAt = typeof doc.savedAt === 'string' ? doc.savedAt : null;
+    return r;
+  }
+
+  /* ── Storage adapters (storage = localStorage-like; every call guarded) ── */
+  function save(storage, state, now) {
+    try {
+      storage.setItem(STORAGE_KEY, serialize(state, now));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e && e.name === 'QuotaExceededError' ? 'Browser storage is full.' : 'Browser storage is unavailable.' };
+    }
+  }
+
+  /* status: 'none' (nothing saved) | 'loaded' | 'recovered' (corrupt save set aside) | 'unavailable' */
+  function load(storage, defaults, opts) {
+    let text;
+    try { text = storage.getItem(STORAGE_KEY); } catch (e) { return { status: 'unavailable', message: 'Browser storage is unavailable; changes will not persist.' }; }
+    if (text == null) return { status: 'none' };
+    const r = parseSave(text, defaults, opts);
+    if (r.ok) return { status: 'loaded', state: r.state, warnings: r.warnings, savedAt: r.savedAt };
+    try { storage.setItem(CORRUPT_KEY, text); } catch (e) { /* best effort */ }
+    return { status: 'recovered', message: 'Saved data could not be read (' + r.errors[0] + ') — a copy was kept and a fresh farm started.', errors: r.errors };
+  }
+
+  return {
+    SCHEMA_VERSION, STORAGE_KEY, CORRUPT_KEY, MAX_JOURNAL, MAX_NOTE, MAX_FILE_BYTES, SEASONS,
+    JOURNAL_TYPES, OPERATOR_TYPES,
+    validateEntry, findDuplicate, addEntry, updateEntry, removeEntry, recordSim,
+    recordSnapshot, summarise, validateState, serialize, parseSave, save, load, seasonForDay,
+  };
+}));
+
+</script>
+<script>
+/* ── Helpers ── */
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function pct(v) { return Math.min(100, Math.max(0, Math.round(v))) + '%'; }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+/* ── Constants ── */
+const SEASONS    = ['spring', 'summer', 'autumn', 'winter'];
+const LOOP_STEPS = ['Observe', 'Decide', 'Act', 'Feedback', 'Learn'];
+
+/* ── Initial state (flat, matches ARCHITECTURE.md schema) ── */
+const INITIAL = {
+  day:    1,
+  season: 'spring',
+
+  // Ecology Loop
+  soilHealth:   72,
+  waterLevel:   58,
+  biodiversity: 45,
+  compost:      60,
+
+  // Aquaculture Loop
+  pondHealth:   80,
+  fishStock:    65,
+  feed:         70,
+  waterQuality: 75,
+  harvestReady: 20,
+
+  // Farm Production Loop
+  planted:   40,
+  growing:   55,
+  harvested: 30,
+  processed: 20,
+
+  // Market / Business Loop
+  stallInventory: 15,
+  demand:         60,
+  pricePerKg:     4.50,
+  cashflow:       320,
+  reputation:     68,
+
+  // Simulation Control
+  loopStep: 0,
+  events: [
+    { day: 1, type: 'green', text: 'Farm season begins. Soil moisture is good.' },
+    { day: 1, type: 'blue',  text: 'Pond water temperature optimal for fish stock.' },
+  ],
+
+  // Phase 2: operator/sim records, id counter, daily snapshots (see upfarm-core.js)
+  journal:    [],
+  journalSeq: 1,
+  history:    [],
+};
+
+let state = JSON.parse(JSON.stringify(INITIAL));
+
+/* ── Tile definitions ── */
+const TILES = [
+  { id:'homestead', emoji:'&#127968;', label:'Homestead',   cls:'tile-homestead', desc:'Main homestead. Infrastructure, tools, and storage.' },
+  { id:'veg1',      emoji:'&#129365;', label:'Veg Bed 1',   cls:'tile-veg',       desc:'Vegetable bed 1. Leafy greens and root vegetables.' },
+  { id:'veg2',      emoji:'&#129370;', label:'Veg Bed 2',   cls:'tile-veg',       desc:'Vegetable bed 2. Brassicas and squash.' },
+  { id:'orchard',   emoji:'&#127822;', label:'Orchard',     cls:'tile-orchard',   desc:'Mixed fruit orchard. Annual harvest in late summer.' },
+  { id:'orchard2',  emoji:'&#127819;', label:'Orchard',     cls:'tile-orchard',   desc:'Stone fruit trees. Peaches and plums.' },
+  { id:'pond',      emoji:'&#128031;', label:'Aqua Pond',   cls:'tile-pond',      desc:'Aquaculture pond. Fish stock and water quality managed here.' },
+  { id:'pond2',     emoji:'&#128032;', label:'Pond 2',      cls:'tile-pond',      desc:'Secondary holding pond for juvenile fish.' },
+  { id:'pasture',   emoji:'&#127807;', label:'Pasture',     cls:'tile-pasture',   desc:'Pasture grazing area. Supports soil health through manure cycle.' },
+  { id:'pasture2',  emoji:'&#127807;', label:'Pasture',     cls:'tile-pasture',   desc:'Rotational pasture block.' },
+  { id:'stall',     emoji:'&#127981;', label:'Market Stall',cls:'tile-stall',     desc:'Roadside produce stall. Connects farm production to local market.' },
+  { id:'compost',   emoji:'&#9851;',   label:'Compost',     cls:'tile-compost',   desc:'Compost and soil system. Closes the waste → fertility loop.' },
+  { id:'water',     emoji:'&#128167;', label:'Water Tank',  cls:'tile-water',     desc:'Water tank and irrigation hub. Feeds veg beds and pond top-up.' },
+  { id:'empty1',    emoji:'',          label:'',            cls:'tile-empty',     desc:'Unused land. Potential for expansion.' },
+  { id:'empty2',    emoji:'',          label:'',            cls:'tile-empty',     desc:'Unused land. Potential native revegetation.' },
+  { id:'empty3',    emoji:'&#127795;', label:'Windbreak',   cls:'tile-empty',     desc:'Native windbreak planting. Supports biodiversity.' },
+];
+
+/* ── Tick functions (pure state mutations) ── */
+
+function tickEcology(s) {
+  const soilBoost = s.compost > 50 ? 1 : 0;
+  s.soilHealth   = clamp(s.soilHealth   - 1 + soilBoost, 0, 100);
+  s.waterLevel   = clamp(s.waterLevel   - 2,             0, 100);
+  s.biodiversity = clamp(s.biodiversity + 0.5,           0, 100);
+  s.compost      = clamp(s.compost      - 1,             0, 100);
+}
+
+function tickAqua(s) {
+  s.feed         = clamp(s.feed         - 3,                        0, 100);
+  s.fishStock    = clamp(s.fishStock    + (s.feed > 20 ? 1 : -2),   0, 100);
+  s.waterQuality = clamp(s.waterQuality - 0.5,                      0, 100);
+  s.pondHealth   = clamp(s.pondHealth   - 0.5 + (s.waterQuality > 40 ? 0.2 : 0), 0, 100);
+  s.harvestReady = clamp(s.harvestReady + 2,                        0, 100);
+}
+
+function tickFarm(s) {
+  s.growing = clamp(s.growing + 2, 0, 100);
+  s.planted = clamp(s.planted - 1, 0, 100);
+}
+
+function tickMarket(s) {
+  s.demand    = clamp(s.demand    + (Math.random() > 0.5 ? 2 : -2), 0, 100);
+  s.pricePerKg= clamp(s.pricePerKg + (s.demand > 50 ? 0.05 : -0.05), 0.50, 25);
+  s.cashflow  = clamp(s.cashflow  - 5 + s.stallInventory * 0.3,      0, 9999);
+}
+
+function rollEvents(s) {
+  const isSummer = s.season === 'summer';
+  const isWinter = s.season === 'winter';
+
+  // Rain: ~15%/day; higher in winter
+  if (Math.random() < (isWinter ? 0.25 : 0.15)) {
+    s.waterLevel   = clamp(s.waterLevel   + 20, 0, 100);
+    s.soilHealth   = clamp(s.soilHealth   + 5,  0, 100);
+    s.waterQuality = clamp(s.waterQuality + 8,  0, 100);
+    addEvent('blue', 'Rain: water levels restored, pond quality improved.');
+    logSim('weather', 'water', null, null, 'Rain: water levels restored, pond quality improved.');
+    return;
+  }
+  // Heatwave: ~5%/day in summer
+  if (isSummer && Math.random() < 0.05) {
+    s.waterLevel = clamp(s.waterLevel - 10, 0, 100);
+    s.soilHealth = clamp(s.soilHealth - 5,  0, 100);
+    s.pondHealth = clamp(s.pondHealth - 5,  0, 100);
+    addEvent('red', 'Heatwave: water depleted, soil stressed, pond health down.');
+    logSim('weather', 'water', null, null, 'Heatwave: water depleted, soil and pond stressed.');
+    return;
+  }
+  // Pest: ~8%/day when growing > 60
+  if (s.growing > 60 && Math.random() < 0.08) {
+    s.growing = clamp(s.growing - 15, 0, 100);
+    addEvent('red', 'Pest attack: crop damage — growing stock reduced.');
+    logSim('observation', 'veg1', null, null, 'Pest attack: growing stock reduced by 15.');
+    return;
+  }
+  // Equipment fault: ~3%/day
+  if (Math.random() < 0.03) {
+    s.cashflow = clamp(s.cashflow - 10, 0, 9999);
+    addEvent('red', 'Equipment fault: emergency repair cost $10.');
+    logSim('maintenance', 'homestead', null, 10, 'Equipment fault: emergency repair.');
+    return;
+  }
+  // Community opportunity: ~5%/day when reputation > 70
+  if (s.reputation > 70 && Math.random() < 0.05) {
+    const bonus = 20 + Math.round(Math.random() * 30);
+    s.cashflow   = clamp(s.cashflow   + bonus, 0, 9999);
+    s.reputation = clamp(s.reputation + 5,     0, 100);
+    addEvent('gold', `Community opportunity: +$${bonus} cashflow, reputation boost.`);
+  }
+}
+
+/* ── advanceDay coordinator ── */
+function advanceDay() {
+  state.day++;
+  state.season = SEASONS[Math.floor(((state.day - 1) % 360) / 90)];
+
+  tickEcology(state);
+  tickAqua(state);
+  tickFarm(state);
+  tickMarket(state);
+  rollEvents(state);
+
+  addEvent('green', `Day ${state.day} (${state.season}): ecology ticked, feed consumed, demand shifted.`);
+  state.loopStep = (state.loopStep + 1) % LOOP_STEPS.length;
+  state.history = UpFarmCore.recordSnapshot(state.history, state);
+  notify('Day ' + state.day + ' — farm ticks applied.');
+  render();
+}
+
+/* ── Action buttons ── */
+function runMarketDay() {
+  const sold    = Math.min(state.stallInventory, Math.round(state.demand / 10));
+  const revenue = sold * state.pricePerKg;
+  state.stallInventory = clamp(state.stallInventory - sold,                           0, 100);
+  state.cashflow       = clamp(state.cashflow       + revenue,                        0, 9999);
+  state.reputation     = clamp(state.reputation     + (sold > 0 ? 3 : -2),           0, 100);
+  state.pricePerKg     = clamp(state.pricePerKg     + (state.demand > 50 ? 0.10 : -0.10), 0.50, 25);
+  state.loopStep = 3; // Feedback
+  addEvent('gold', `Market Day: sold ${sold} units for $${revenue.toFixed(2)}. Reputation ${sold > 0 ? '▲' : '▼'}.`);
+  if (sold > 0) logSim('sale', 'stall', sold, revenue, 'Market day sales.');
+  notify(`Market Day — $${revenue.toFixed(2)} earned.`);
+  render();
+}
+
+function simulateRain() {
+  state.waterLevel   = clamp(state.waterLevel   + 20, 0, 100);
+  state.soilHealth   = clamp(state.soilHealth   + 5,  0, 100);
+  state.pondHealth   = clamp(state.pondHealth   + 5,  0, 100);
+  state.waterQuality = clamp(state.waterQuality + 8,  0, 100);
+  addEvent('blue', 'Rain event: soil moisture +20%, pond topped up, water quality improved.');
+  logSim('weather', 'water', null, null, 'Simulated rain: soil moisture +20%, pond topped up.');
+  notify('Rain simulated — water levels up.');
+  render();
+}
+
+function inspectPond() {
+  const status  = state.pondHealth > 70 ? 'Healthy' : state.pondHealth > 40 ? 'Moderate' : 'Poor';
+  const harvest = state.harvestReady > 70
+    ? 'Ready to harvest!'
+    : `${state.harvestReady.toFixed(0)}% toward harvest.`;
+  addEvent('blue', `Pond inspect: Health ${status} (${state.pondHealth.toFixed(0)}%), Fish ${state.fishStock.toFixed(0)}%, ${harvest}`);
+  logSim('inspection', 'pond', null, null, `Pond ${status} (${state.pondHealth.toFixed(0)}%), fish ${state.fishStock.toFixed(0)}%.`);
+  notify(`Pond: ${status} — ${harvest}`);
+  render();
+}
+
+function harvestProduce() {
+  const yield_ = Math.round(state.growing * 0.4);
+  state.harvested      = clamp(state.harvested      + yield_,                   0, 100);
+  state.growing        = clamp(state.growing        - yield_ * 0.8,             0, 100);
+  state.processed      = clamp(state.processed      + Math.round(yield_ * 0.7), 0, 100);
+  state.stallInventory = clamp(state.stallInventory + Math.round(yield_ * 0.5), 0, 100);
+  state.compost        = clamp(state.compost        + 5,                        0, 100);
+  state.loopStep = 2; // Act
+  addEvent('green', `Harvest: ${yield_} units cut. ${Math.round(yield_ * 0.5)} added to stall. Compost boosted.`);
+  if (yield_ > 0) logSim('harvest', 'veg1', yield_, null, `Simulated harvest; ${Math.round(yield_ * 0.5)} to stall.`);
+  notify(`Harvested ${yield_} units — stall restocked.`);
+  render();
+}
+
+function resetDemo() {
+  const n = state.journal.filter(e => e.source === 'operator').length;
+  const msg = 'Reset the farm to its initial state?' +
+    (n ? '\n\nThis erases ' + n + ' operator journal record(s) and the saved copy in this browser. Use Export JSON first to keep them.' : '');
+  if (!window.confirm(msg)) { notify('Reset cancelled.'); return; }
+  state = JSON.parse(JSON.stringify(INITIAL));
+  state.history = UpFarmCore.recordSnapshot([], state);
+  cancelEdit();
+  document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('tile-info').textContent = 'Click a tile to inspect it.';
+  notify('Demo reset to initial state.');
+  render();
+}
+
+/* ── Render ── */
+function statRow(label, value, max, barClass, unit) {
+  const pv = Math.round((value / max) * 100);
+  let display;
+  if (unit === '$') display = '$' + value.toFixed(2);
+  else if (unit === '')  display = Math.round(value);
+  else display = Math.round(value) + unit;
+  return `<div class="stat-row">
+    <span class="stat-label">${label}</span>
+    <div class="stat-bar-wrap"><div class="stat-bar ${barClass}" style="width:${pct(pv)}"></div></div>
+    <span class="stat-value">${display}</span>
+  </div>`;
+}
+
+function renderEcology() {
+  document.getElementById('ecology-body').innerHTML = `
+    <div>
+      ${statRow('Soil Health',  state.soilHealth,  100, 'bar-brown', '%')}
+      ${statRow('Water Level',  state.waterLevel,  100, 'bar-blue',  '%')}
+      ${statRow('Biodiversity', state.biodiversity,100, 'bar-green', '%')}
+    </div>
+    <div>
+      ${statRow('Compost', state.compost, 100, 'bar-brown', '%')}
+      <div class="stat-row">
+        <span class="stat-label">Season</span>
+        <div class="stat-bar-wrap"></div>
+        <span class="stat-value" style="text-transform:capitalize">${state.season}</span>
+      </div>
+    </div>`;
+}
+
+function renderAqua() {
+  document.getElementById('aqua-body').innerHTML =
+    statRow('Pond Health',   state.pondHealth,   100, 'bar-blue',  '%') +
+    statRow('Fish Stock',    state.fishStock,    100, 'bar-blue',  '%') +
+    statRow('Feed',          state.feed,         100, 'bar-green', '%') +
+    statRow('Water Quality', state.waterQuality, 100, 'bar-blue',  '%') +
+    statRow('Harvest Ready', state.harvestReady, 100, 'bar-gold',  '%');
+}
+
+function renderFarm() {
+  document.getElementById('farm-body').innerHTML = `
+    <div>
+      ${statRow('Planted',   state.planted,   100, 'bar-green', '%')}
+      ${statRow('Growing',   state.growing,   100, 'bar-green', '%')}
+      ${statRow('Harvested', state.harvested, 100, 'bar-brown', '%')}
+    </div>
+    <div>
+      ${statRow('Processed',      state.processed,      100, 'bar-gold', '%')}
+      ${statRow('Stall Inventory',state.stallInventory, 100, 'bar-gold', '')}
+    </div>`;
+}
+
+function renderMarket() {
+  document.getElementById('market-body').innerHTML =
+    statRow('Demand',     state.demand,     100,  'bar-gold',  '%') +
+    `<div class="stat-row">
+      <span class="stat-label">Price/kg</span>
+      <div class="stat-bar-wrap"><div class="stat-bar bar-gold" style="width:${pct(state.pricePerKg / 10 * 100)}"></div></div>
+      <span class="stat-value">$${state.pricePerKg.toFixed(2)}</span>
+    </div>` +
+    statRow('Cashflow',   state.cashflow,   9999, 'bar-green', '$') +
+    statRow('Reputation', state.reputation, 100,  'bar-green', '%');
+}
+
+function renderEvents() {
+  const colours = { green:'#4caf50', blue:'#4a9eca', red:'#e05a3a', gold:'#e8c24a', brown:'#a07850' };
+  document.getElementById('event-list').innerHTML = state.events.slice().reverse().map(ev =>
+    `<li class="event-item">
+      <div class="event-dot" style="background:${colours[ev.type]||'#888'}"></div>
+      <span class="event-day">Day ${ev.day}</span>
+      <span class="event-text">${esc(ev.text)}</span>
+    </li>`
+  ).join('');
+}
+
+function renderLoop() {
+  document.getElementById('loop-diagram').innerHTML = LOOP_STEPS.map((s, i) => {
+    const active = i === state.loopStep ? ' active' : '';
+    const arrow  = i < LOOP_STEPS.length - 1 ? '<span class="loop-arrow">&#9654;</span>' : '';
+    return `<div class="loop-step${active}">${s}</div>${arrow}`;
+  }).join('');
+}
+
+function renderMap() {
+  document.getElementById('map-grid').innerHTML = TILES.map(t =>
+    `<div class="tile ${t.cls}" data-id="${t.id}" role="button" tabindex="0" aria-label="${esc(t.label || 'Empty land')}" onclick="selectTile('${t.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectTile('${t.id}')}" title="${esc(t.desc)}">
+      <span>${t.emoji}</span>
+      <span class="tile-label">${t.label}</span>
+    </div>`
+  ).join('');
+}
+
+function render() {
+  document.getElementById('day-counter').textContent = 'Day ' + state.day;
+  renderEcology();
+  renderAqua();
+  renderFarm();
+  renderMarket();
+  renderEvents();
+  renderLoop();
+  renderSummary();
+  renderJournal();
+  if (!suppressSave) persist();
+}
+
+/* ── Tile selection ── */
+function selectTile(id) {
+  document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) el.classList.add('selected');
+  const tile = TILES.find(t => t.id === id);
+  document.getElementById('tile-info').innerHTML = tile
+    ? `<strong>${tile.label || 'Empty Land'}</strong> — ${tile.desc}`
+    : 'Unknown tile.';
+}
+
+/* ── Event helper ── */
+function addEvent(type, text) {
+  state.events.push({ day: state.day, type, text });
+  if (state.events.length > 20) state.events.shift();
+}
+
+/* ── Notification ── */
+let notifTimer;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+/* ── Phase 2: persistence, journal, summary (logic lives in upfarm-core.js) ── */
+let suppressSave = true;
+let editingId = null;
+const CORE_OPTS = { zones: TILES.map(t => t.id) };
+
+function safeStorage() { try { return window.localStorage; } catch (e) { return null; } }
+
+function setSaveStatus(ok, text) {
+  const el = document.getElementById('save-status');
+  el.textContent = text;
+  el.className = ok ? 'ok' : 'warn';
+}
+
+function persist() {
+  const st = safeStorage();
+  const r = st ? UpFarmCore.save(st, state) : { ok: false, error: 'Browser storage is unavailable.' };
+  if (r.ok) setSaveStatus(true, 'Saved ' + new Date().toLocaleTimeString('en-AU', { hour12: false }) + ' ✓');
+  else setSaveStatus(false, 'Not saved — ' + r.error + ' Use Export JSON.');
+}
+
+function showBanner(kind, title, lines) {
+  const b = document.getElementById('banner');
+  b.className = 'show' + (kind === 'error' ? ' error' : '');
+  b.innerHTML = '<div class="banner-text"><strong>' + esc(title) + '</strong>' +
+    (lines && lines.length ? '<ul>' + lines.slice(0, 5).map(l => '<li>' + esc(l) + '</li>').join('') +
+      (lines.length > 5 ? '<li>…and ' + (lines.length - 5) + ' more</li>' : '') + '</ul>' : '') +
+    '</div><button type="button" onclick="hideBanner()">Dismiss</button>';
+}
+function hideBanner() { document.getElementById('banner').className = ''; }
+
+function logSim(type, zone, quantity, value, note) {
+  const r = UpFarmCore.recordSim(state.journal, state.journalSeq, { day: state.day, type, zone, quantity, value, note });
+  state.journal = r.journal; state.journalSeq = r.seq;
+}
+
+function exportSave() {
+  const blob = new Blob([UpFarmCore.serialize(state)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'upfarm-day' + state.day + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  notify('Exported day ' + state.day + ' save file.');
+}
+
+function applyImport(text) {
+  const r = UpFarmCore.parseSave(text, INITIAL, CORE_OPTS);
+  if (!r.ok) { showBanner('error', 'Import failed — current farm left unchanged', r.errors); return false; }
+  if (!window.confirm('Replace the current farm (day ' + state.day + ') with the imported save (day ' + r.state.day + ')?')) { notify('Import cancelled.'); return false; }
+  state = r.state;
+  if (!state.history.length) state.history = UpFarmCore.recordSnapshot([], state);
+  cancelEdit();
+  if (r.warnings.length) showBanner('warn', 'Imported with adjustments', r.warnings); else hideBanner();
+  notify('Imported day ' + state.day + '.');
+  render();
+  return true;
+}
+
+function importSave(file) {
+  if (!file) return;
+  if (file.size > UpFarmCore.MAX_FILE_BYTES) { showBanner('error', 'Import failed', ['File is larger than 1 MB.']); return; }
+  const rd = new FileReader();
+  rd.onerror = () => showBanner('error', 'Import failed', ['The file could not be read.']);
+  rd.onload = () => applyImport(String(rd.result));
+  rd.readAsText(file);
+}
+
+/* ── Journal form ── */
+function jEl(id) { return document.getElementById(id); }
+const J_FIELDS = { day: 'j-day', type: 'j-type', zone: 'j-zone', quantity: 'j-qty', value: 'j-value', note: 'j-note' };
+
+function initJournalForm() {
+  jEl('j-type').innerHTML = '<option value="">Select…</option>' + UpFarmCore.OPERATOR_TYPES.map(t =>
+    `<option value="${t}">${esc(UpFarmCore.JOURNAL_TYPES[t].label)}</option>`).join('');
+  jEl('j-zone').innerHTML = '<option value="">Select…</option>' + TILES.filter(t => t.label).map(t =>
+    `<option value="${t.id}">${esc(t.label)} (${esc(t.id)})</option>`).join('');
+  jEl('j-filter-type').innerHTML = '<option value="">All records</option><option value="_operator">My records only</option>' +
+    Object.keys(UpFarmCore.JOURNAL_TYPES).map(t => `<option value="${t}">${esc(UpFarmCore.JOURNAL_TYPES[t].label)}</option>`).join('');
+  jEl('j-filter-type').addEventListener('change', renderJournal);
+  jEl('j-form').addEventListener('submit', onJournalSubmit);
+  jEl('j-cancel').addEventListener('click', () => { cancelEdit(); jEl('j-type').focus(); });
+  jEl('import-file').addEventListener('change', e => { importSave(e.target.files[0]); e.target.value = ''; });
+  resetJournalForm();
+}
+
+function resetJournalForm() {
+  jEl('j-form').reset();
+  jEl('j-day').value = state.day;
+  clearJournalErrors();
+}
+
+function clearJournalErrors() {
+  Object.keys(J_FIELDS).forEach(k => { jEl('e-' + k).textContent = ''; jEl(J_FIELDS[k]).removeAttribute('aria-invalid'); });
+  jEl('j-form-error').textContent = '';
+}
+
+function showJournalErrors(errors) {
+  clearJournalErrors();
+  let first = null;
+  Object.keys(errors).forEach(k => {
+    if (k === '_form') { jEl('j-form-error').textContent = errors[k]; return; }
+    jEl('e-' + k).textContent = errors[k];
+    const f = jEl(J_FIELDS[k]); f.setAttribute('aria-invalid', 'true');
+    if (!first) first = f;
+  });
+  (first || jEl('j-submit')).focus();
+}
+
+function readJournalForm() {
+  const o = {};
+  Object.keys(J_FIELDS).forEach(k => { o[k] = jEl(J_FIELDS[k]).value; });
+  return o;
+}
+
+let submitLock = false;
+function onJournalSubmit(ev) {
+  ev.preventDefault();
+  if (submitLock) return;
+  const ctx = { day: state.day, zones: CORE_OPTS.zones };
+  const input = readJournalForm();
+  const r = editingId !== null
+    ? UpFarmCore.updateEntry(state.journal, editingId, input, ctx)
+    : UpFarmCore.addEntry(state.journal, state.journalSeq, input, ctx);
+  if (!r.ok) { showJournalErrors(r.errors); return; }
+  submitLock = true; setTimeout(() => { submitLock = false; }, 300); // guards double-submit
+  state.journal = r.journal;
+  if (editingId === null) state.journalSeq = r.seq;
+  notify((editingId !== null ? 'Updated ' : 'Recorded ') + UpFarmCore.JOURNAL_TYPES[r.entry.type].label.toLowerCase() + ' (day ' + r.entry.day + ').');
+  editingId = null;
+  resetJournalForm();
+  setEditMode(false);
+  render();
+  jEl('j-type').focus();
+}
+
+function setEditMode(on) {
+  jEl('j-submit').textContent = on ? 'Save changes' : '+ Add record';
+  jEl('j-cancel').hidden = !on;
+}
+
+function startEdit(id) {
+  const e = state.journal.find(x => x.id === id && x.source === 'operator');
+  if (!e) return;
+  editingId = id;
+  clearJournalErrors();
+  jEl('j-day').value = e.day; jEl('j-type').value = e.type; jEl('j-zone').value = e.zone;
+  jEl('j-qty').value = e.quantity == null ? '' : e.quantity;
+  jEl('j-value').value = e.value == null ? '' : e.value;
+  jEl('j-note').value = e.note;
+  setEditMode(true);
+  jEl('j-type').focus();
+}
+
+function cancelEdit() {
+  editingId = null;
+  if (document.getElementById('j-form')) { resetJournalForm(); setEditMode(false); }
+}
+
+function deleteEntry(id) {
+  const e = state.journal.find(x => x.id === id);
+  if (!e || e.source !== 'operator') return;
+  if (!window.confirm('Delete this ' + UpFarmCore.JOURNAL_TYPES[e.type].label.toLowerCase() + ' record from day ' + e.day + '?')) return;
+  const r = UpFarmCore.removeEntry(state.journal, id);
+  if (!r.ok) return;
+  state.journal = r.journal;
+  if (editingId === id) cancelEdit();
+  notify('Record deleted.');
+  render();
+}
+
+function renderJournal() {
+  const filter = jEl('j-filter-type').value;
+  const all = state.journal.slice().reverse();
+  const rows = all.filter(e => !filter || (filter === '_operator' ? e.source === 'operator' : e.type === filter));
+  jEl('j-count').textContent = rows.length + ' of ' + all.length + ' record(s)';
+  if (!all.length) {
+    jEl('j-list').innerHTML = '<li class="j-empty">No records yet. Add one above, or use the simulation buttons — those are logged here too.</li>';
+    return;
+  }
+  if (!rows.length) { jEl('j-list').innerHTML = '<li class="j-empty">No records match this filter.</li>'; return; }
+  const zoneLabel = id => (TILES.find(t => t.id === id) || {}).label || id;
+  jEl('j-list').innerHTML = rows.map(e => {
+    const spec = UpFarmCore.JOURNAL_TYPES[e.type];
+    const bits = [zoneLabel(e.zone)];
+    if (e.quantity != null) bits.push(e.quantity + ' units');
+    if (e.value != null) bits.push('$' + e.value.toFixed(2));
+    const meta = esc(bits.join(' · ')) + (e.note ? ' — ' + esc(e.note) : '');
+    const actions = e.source === 'operator'
+      ? `<button type="button" onclick="startEdit(${e.id})" aria-label="Edit ${esc(spec.label)} record from day ${e.day}">Edit</button>
+         <button type="button" onclick="deleteEntry(${e.id})" aria-label="Delete ${esc(spec.label)} record from day ${e.day}">Delete</button>`
+      : '<span class="j-tag">simulation</span>';
+    return `<li class="j-item"><span class="j-day">Day ${e.day}</span>
+      <span class="j-type ${e.source === 'sim' ? 'src-sim' : ''}">${esc(spec.label)}</span>
+      <span class="j-meta">${meta}${e.edited ? ' <span class="j-tag">edited</span>' : ''}</span>${actions}</li>`;
+  }).join('');
+}
+
+function sparkline(hist) {
+  if (hist.length < 2) return '<div class="j-empty">Advance a few days to see the cash trend.</div>';
+  const vals = hist.map(h => h.cashflow);
+  const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => (i / (vals.length - 1) * 200).toFixed(1) + ',' + (44 - (v - lo) / span * 40).toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 200 48" preserveAspectRatio="none" role="img" aria-label="Cash trend, day ${hist[0].day} to ${hist[hist.length - 1].day}: $${vals[0].toFixed(0)} to $${vals[vals.length - 1].toFixed(0)}">
+    <polyline fill="none" stroke="var(--col-green)" stroke-width="2" vector-effect="non-scaling-stroke" points="${pts}"/></svg>`;
+}
+
+function renderSummary() {
+  const m = UpFarmCore.summarise(state);
+  const money = n => (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(2);
+  const item = (k, v) => `<div class="sum-item"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const alerts = m.alerts.length
+    ? m.alerts.map(a => `<li class="${a.level}"><span class="sr-only">${a.level === 'red' ? 'Warning: ' : 'Notice: '}</span>${esc(a.text)}</li>`).join('')
+    : '<li class="green">No alerts — operations look on track.</li>';
+  const cc = m.cashChange == null ? '—' : (m.cashChange >= 0 ? '+' : '-') + money(Math.abs(m.cashChange));
+  jEl('summary-body').innerHTML =
+    `<ul class="alert-list">${alerts}</ul>
+     <div class="sum-grid">
+       ${item('Records (mine / sim)', m.operatorRecords + ' / ' + m.simRecords)}
+       ${item('Last 7 days', m.recent7 + ' record(s)')}
+       ${item('Harvested', m.harvestUnits + ' units')}
+       ${item('Sold', m.soldUnits + ' units')}
+       ${item('Sales revenue', money(m.revenue))}
+       ${item('Repairs', money(m.maintenanceCost))}
+       ${item('Net (sales − repairs)', money(m.net))}
+       ${item('Cash change (' + state.history.length + ' d)', cc)}
+     </div>
+     <div class="stat-label">Cash trend</div><div class="spark-wrap">${sparkline(state.history)}</div>`;
+}
+
+function initState() {
+  const st = safeStorage();
+  if (!st) { setSaveStatus(false, 'Not saved — browser storage is unavailable. Use Export JSON.'); return; }
+  const r = UpFarmCore.load(st, INITIAL, CORE_OPTS);
+  if (r.status === 'loaded') {
+    state = r.state;
+    if (r.warnings.length) showBanner('warn', 'Saved farm loaded with adjustments', r.warnings);
+    notify('Restored day ' + state.day + ' from this browser.');
+  } else if (r.status === 'recovered') {
+    showBanner('error', 'Saved data was unreadable', [r.message]);
+  } else if (r.status === 'unavailable') {
+    setSaveStatus(false, 'Not saved — browser storage is unavailable. Use Export JSON.');
+  }
+}
+
+/* ── Init ── */
+renderMap();
+initState();
+if (!state.history.length) state.history = UpFarmCore.recordSnapshot([], state);
+initJournalForm();
+suppressSave = false;
+render();
+</script>
+</body>
+</html>
