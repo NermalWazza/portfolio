@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; script-src 'sha256-zeugI6NKGNir1B4A+xrDHKBzDMhJnUK3wxW59l1Hh/U='">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; script-src 'sha256-oO9QmnQDI7Mtt9Ouy3FCuwsSU7sM0zbYrUW6B9zQP7M='">
 <meta name="description" content="Selected research, working software and illustrated satire exploring AI, human agency and a changing world.">
 <title>Selected Work — Portfolio</title><script data-portfolio-appearance>
 /* Shared by the portfolio documents so standalone copies need no external assets. */
@@ -21,7 +21,7 @@
     root.setAttribute('data-portfolio-appearance', preference);
     root.setAttribute('data-theme', preference === 'system' ? (media && media.matches ? 'dark' : 'light') : preference);
     var control = document.getElementById('portfolio-appearance');
-    if (control) control.value = preference;
+    if (control) { control.value = preference; control.querySelectorAll('input').forEach(function (input) { input.checked = input.value === preference; }); }
   }
   function choose(value) {
     if (!valid(value)) return;
@@ -31,7 +31,7 @@
   apply(read());
   function bind() {
     var control = document.getElementById('portfolio-appearance');
-    if (control) { control.value = preference; control.addEventListener('change', function () { choose(control.value); }); }
+    if (control) { apply(preference); control.addEventListener('change', function (event) { choose(event.target.value); }); }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
   else bind();
@@ -69,9 +69,9 @@
 @media print { .portfolio-appearance-control {display:none} }
 
 @media screen{}
-</style></head><body><main>
+</style><style>@media screen{fieldset.portfolio-appearance-control{display:block;border:0;padding:0;min-width:0}fieldset.portfolio-appearance-control legend{padding:0;margin-bottom:8px;font-weight:600}.appearance-buttons{display:inline-flex;gap:6px;flex-wrap:wrap}.appearance-buttons input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.appearance-buttons label{display:block;cursor:pointer;min-width:78px;text-align:center;min-height:44px;padding:9px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);font-weight:400}.appearance-buttons input:checked+label{background:var(--brass);border-color:var(--brass);color:#16130d;font-weight:700}.appearance-buttons input:focus-visible+label{outline:3px solid var(--cyan);outline-offset:3px}html[data-theme=light] .appearance-buttons input:checked+label{color:#fff}}</style></head><body><main>
 <div class="eyebrow">Selected work / Portfolio</div>
-<div class="portfolio-appearance-control"><label for="portfolio-appearance">Appearance</label><select id="portfolio-appearance" aria-label="Appearance for all portfolio pages"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+<fieldset class="portfolio-appearance-control" id="portfolio-appearance"><legend>Appearance</legend><div class="appearance-buttons"><input type="radio" name="portfolio-appearance-choice" id="appearance-light" value="light"><label for="appearance-light">Light</label><input type="radio" name="portfolio-appearance-choice" id="appearance-dark" value="dark"><label for="appearance-dark">Dark</label><input type="radio" name="portfolio-appearance-choice" id="appearance-system" value="system" checked><label for="appearance-system">System</label></div></fieldset>
 <h1>Ideas, evidence<br>and expression.</h1>
 <p class="lede">A personal space for research, working software and illustrated stories — exploring what AI changes, what it helps us make, and how we express what we think.</p>
 <p class="notice">Explore four selected pieces. Research distinguishes evidence from speculation; the software showcase includes playable applications; the illustrated stories express ideas through satire.</p>
