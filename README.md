@@ -10,6 +10,7 @@ The website is the main entry point for the collection. This repository contains
 
 - [The Acceleration Question](https://nermalwazza.github.io/ai-acceleration-report/) — an evidence-labelled report on AI and civilisational change.
 - [The Twin Engine](https://nermalwazza.github.io/portfolio/dual-project-showcase/) — an illustrated software showcase with two playable applications.
+- [The Creative Software Convergence](https://nermalwazza.github.io/portfolio/creative-software-convergence/) — an evidence-labelled research briefing on interoperability across audio, video and AI-generation tools.
 - [The Sorcerer’s Agent.exe](https://nermalwazza.github.io/portfolio/sorcerers-agent/) — illustrated satire about runaway automation, scope and human decisions.
 - [The Humans Changed the Terms and Conditions](https://nermalwazza.github.io/portfolio/humans-changed-terms/) — illustrated speculative satire about AI and social change; includes strong language and adult social themes.
 
