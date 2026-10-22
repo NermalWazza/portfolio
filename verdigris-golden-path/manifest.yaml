@@ -1,6 +1,6 @@
 schema: creative-project-manifest/1
 task_id: BP-CREATIVE-PORTFOLIO-001
-status: draft-unpublished
+status: publication-approved
 prepared: 2026-10-22
 project:
   name: Verdigris and the Golden Path
@@ -16,13 +16,14 @@ project:
     role: evolving fictional storytelling element
     stages: [smudge, silhouette, hat-and-flask, vine-beard, golden-thread]
 pages:
+  - {path: story.html, purpose: one-minute captioned animated browser story}
   - {path: index.html, purpose: interactive demonstration}
   - {path: presentation.html, purpose: offline slide presentation (10 slides)}
   - {path: verification.html, purpose: provenance, checks, limitations}
 capabilities:
   verified: [mood states, golden-path slider, five Wizard stages, deterministic brewing lab, rhythm start/stop and tempo control, zero network requests, keyboard-operable native controls]
   not_verified: [audible sound output, screen-reader behaviour, browsers other than Chromium]
-  proposed_only: [episodic video, recorded soundtrack, raster key art, sprite-sheet export]
+  proposed_only: [rendered video export, recorded soundtrack, raster key art, sprite-sheet export]
 assets:
   third_party: []
   raster_images: 0
@@ -37,6 +38,7 @@ security:
   storage: none
   network: none
 approval:
-  required: true
-  published: false
-  forbidden_until_approved: [push to public branch, merge to main, enable or alter GitHub Pages, make any repository public]
+  required: false
+  approved: true
+  date: '2026-10-22'
+  scope: Publish the reviewed Verdigris story and portfolio integration to the existing GitHub portfolio. Future changes require their own scope.

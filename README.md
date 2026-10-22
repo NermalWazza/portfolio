@@ -16,3 +16,5 @@ The website is the main entry point for the collection. This repository contains
 - [The Humans Changed the Terms and Conditions](https://nermalwazza.github.io/portfolio/humans-changed-terms/) — illustrated speculative satire about AI and social change; includes strong language and adult social themes.
 
 Research, interpretation and fiction are labelled separately. The website includes verification and illustration-provenance notes where relevant.
+
+Preview update (22 October 2026): Verdigris is woven into the six-piece portfolio storyline. Start with verdigris-golden-path/story.html for the captioned one-minute animated browser story, then open the demonstration, presentation and verification notes. A rendered video file is not included.
