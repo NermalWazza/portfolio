@@ -1,0 +1,102 @@
+{
+  "schema": "creative-project-manifest/1",
+  "task_id": "BP-CREATIVE-PORTFOLIO-001",
+  "status": "publication-approved",
+  "prepared": "2026-10-22",
+  "project": {
+    "name": "Verdigris and the Golden Path",
+    "kind": "fiction / interactive character study",
+    "aesthetic": [
+      "steampunk",
+      "cyber",
+      "organic"
+    ],
+    "symbolism_note": "AI-blue = signal, organic green = growth, golden path = connection and chosen direction. Creative interpretation, not factual claims.",
+    "character": {
+      "name": "Verdigris",
+      "moods": [
+        "curious",
+        "brewing",
+        "alarmed",
+        "triumphant"
+      ]
+    },
+    "wizard": {
+      "role": "evolving fictional storytelling element",
+      "stages": [
+        "smudge",
+        "silhouette",
+        "hat-and-flask",
+        "vine-beard",
+        "golden-thread"
+      ]
+    }
+  },
+  "pages": [
+    {
+      "path": "index.html",
+      "purpose": "interactive demonstration"
+    },
+    {
+      "path": "presentation.html",
+      "purpose": "offline slide presentation (10 slides)"
+    },
+    {
+      "path": "verification.html",
+      "purpose": "provenance, checks, limitations"
+    },
+    {
+      "path": "story.html",
+      "purpose": "one-minute captioned animated browser story"
+    }
+  ],
+  "capabilities": {
+    "verified": [
+      "mood states",
+      "golden-path slider",
+      "five Wizard stages",
+      "deterministic brewing lab",
+      "rhythm start/stop and tempo control",
+      "zero network requests",
+      "keyboard-operable native controls"
+    ],
+    "not_verified": [
+      "audible sound output",
+      "screen-reader behaviour",
+      "browsers other than Chromium"
+    ],
+    "proposed_only": [
+      "rendered video export",
+      "recorded soundtrack",
+      "raster key art",
+      "sprite-sheet export"
+    ]
+  },
+  "assets": {
+    "third_party": [],
+    "raster_images": 0,
+    "audio_files": 0,
+    "fonts_loaded": 0,
+    "provenance": "original inline SVG/CSS/JS authored by an AI assistant under human direction"
+  },
+  "licence": {
+    "status": "undecided",
+    "note": "Owner to choose before publication; portfolio states no new distribution rights are granted."
+  },
+  "security": {
+    "csp": "default-src 'none'; single hashed inline script; no connect-src",
+    "storage": "none",
+    "network": "none"
+  },
+  "approval": {
+    "required": false,
+    "approved": true,
+    "date": "2026-10-22",
+    "scope": "Publish the reviewed Verdigris story, demonstration, presentation, reports and portfolio integration to the existing GitHub portfolio. Future changes require their own scope."
+  },
+  "preview_update": {
+    "date": "2026-10-22",
+    "scope": "captioned animated story and portfolio storyline integration",
+    "publication": "Approved for publication by the owner on 22 October 2026"
+  }
+}
