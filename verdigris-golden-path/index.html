@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; media-src 'none'; script-src 'sha256-7tkrj13MIs7x/ThGJIyb9s3yEEmuA6j8I+mq2Twq4pw='">
+<meta name="description" content="An original steampunk–cyber–organic character with moods, motion, rhythm and an evolving Wizard. Fiction; works offline.">
+<link rel="canonical" href="https://nermalwazza.github.io/portfolio/verdigris-golden-path/">
+<meta name="theme-color" content="#0b1013">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%230b1013%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%278%27 fill=%27none%27 stroke=%27%23e5bd7c%27 stroke-width=%273%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%273%27 fill=%27%236fcfff%27/%3E%3C/svg%3E">
+<title>Verdigris and the Golden Path — interactive character study</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1013;--panel:#131e23;--panel2:#18262c;--line:#344047;--text:#ebeee9;--muted:#b3bebc;--brass:#e5bd7c;--copper:#e08a52;--blue:#6fcfff;--green:#7fe093;--gold:#ffd36b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.7 "Segoe UI",Arial,sans-serif}
+main{max-width:1120px;margin:auto;padding:40px 24px 70px}a{color:var(--blue);text-underline-offset:4px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
+h1,h2,h3{font-family:Georgia,serif;font-weight:400;line-height:1.15}h1{font-size:clamp(38px,6.5vw,72px);margin:.2em 0}h2{font-size:clamp(26px,3.5vw,38px);margin:0 0 .3em}h3{font-size:22px;margin:.2em 0}
+.eyebrow{font:700 12px Consolas,monospace;letter-spacing:2px;text-transform:uppercase;color:var(--brass)}
+.lede{font-size:20px;color:var(--muted);max-width:760px}
+section{margin-top:60px}.skip{position:absolute;left:-999px;top:0;background:var(--brass);color:var(--bg);padding:10px 16px;z-index:10}.skip:focus{left:8px;top:8px}
+.pf-nav{background:#0b1013;border-bottom:1px solid #344047;font:600 15px/1.4 "Segoe UI",Arial,sans-serif}.pf-nav ul{list-style:none;margin:0 auto;padding:0 16px;max-width:1200px;display:flex;flex-wrap:wrap;gap:0 4px}.pf-nav li:first-child{margin-right:auto}.pf-nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:#ebeee9;text-decoration:none}.pf-nav a:hover{color:#e5bd7c;text-decoration:underline}.pf-nav a[aria-current=page]{color:#e5bd7c;box-shadow:inset 0 -3px #e5bd7c}
+.stage{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:28px;align-items:start;margin-top:22px}
+.stagebox{background:radial-gradient(circle at 50% 30%,#1b2e36,#0b1013 75%);border:1px solid var(--line);border-radius:10px;padding:10px;position:relative}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+button,.btn{font:600 15px "Segoe UI",Arial,sans-serif;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:0 16px;min-height:44px;cursor:pointer}
+button:hover{border-color:var(--brass);color:var(--brass)}button[aria-pressed=true]{background:#2a2412;border-color:var(--gold);color:var(--gold)}
+label{display:block;font-weight:600;margin:12px 0 4px}input[type=range]{width:100%;min-height:32px;accent-color:#e5bd7c}
+.live{min-height:3.2em;color:var(--muted);font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.tag{font:700 11px Consolas,monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--brass)}
+.verified{color:var(--green)}.proposed{color:var(--copper)}
+table{border-collapse:collapse;width:100%;font-size:15px}th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}th{background:var(--panel2)}
+.scroll{overflow-x:auto}.notice{border-left:4px solid var(--brass);background:#1a1810;padding:12px 16px;border-radius:0 8px 8px 0}
+.ing label{display:inline-flex;align-items:center;gap:8px;margin:4px 14px 4px 0;min-height:44px}.ing input{width:20px;height:20px}
+.beat{display:inline-block;width:14px;height:14px;border-radius:50%;background:#26343a;vertical-align:middle;margin-left:8px}.beat.on{background:var(--blue);box-shadow:0 0 14px var(--blue)}
+footer{margin-top:60px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+/* --- character motion --- */
+.char,.wiz{width:100%;height:auto;display:block}
+.char .cog{animation:spin 24s linear infinite;transform-box:fill-box;transform-origin:center}
+.char .steam circle{animation:rise 3.5s ease-in infinite;opacity:0}.char .steam circle:nth-child(2){animation-delay:1s}.char .steam circle:nth-child(3){animation-delay:2s}
+.char .needle{transition:transform .8s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:50% 100%;transform:rotate(-20deg)}
+.char .eye .halo{animation:pulse 2.4s ease-in-out infinite}.char .eye .pupil{transition:transform .3s}
+.char .vine{stroke-dasharray:100;stroke-dashoffset:var(--grow,40);transition:stroke-dashoffset 1.2s ease}
+.char .leaves{opacity:var(--leaf,.5);transition:opacity 1.2s}
+.char .gold-path{stroke-dasharray:100;stroke-dashoffset:calc(100 - var(--prog,0));transition:stroke-dashoffset .3s}
+.char .walker{transition:transform .3s}
+.char .spark{animation:blink 1.6s steps(2) infinite}
+.char .arm-l,.char .arm-r{transition:transform .5s;transform-box:fill-box}
+.char .arm-l{transform-origin:100% 0}.char .arm-r{transform-origin:0 0}
+.char[data-mood=curious]{--grow:40;--leaf:.5}
+.char[data-mood=brewing]{--grow:15;--leaf:.8}.char[data-mood=brewing] .needle{transform:rotate(50deg)}.char[data-mood=brewing] .arm-l{transform:rotate(-14deg)}.char[data-mood=brewing] .steam circle{animation-duration:1.6s}
+.char[data-mood=alarmed]{--grow:60;--leaf:.3}.char[data-mood=alarmed] .needle{transform:rotate(110deg)}.char[data-mood=alarmed] .lens-mid{stop-color:#ff6a4d}.char[data-mood=alarmed] .halo{fill:#ff6a4d;animation-duration:.5s}.char[data-mood=alarmed] .pupil{transform:scaleX(2.6)}.char[data-mood=alarmed] .arm-l{transform:rotate(18deg)}.char[data-mood=alarmed] .arm-r{transform:rotate(-18deg)}
+.char[data-mood=triumphant]{--grow:0;--leaf:1}.char[data-mood=triumphant] .needle{transform:rotate(0)}.char[data-mood=triumphant] .arm-l{transform:rotate(-34deg)}.char[data-mood=triumphant] .arm-r{transform:rotate(34deg)}.char[data-mood=triumphant] .lens-mid{stop-color:#ffd36b}.char[data-mood=triumphant] .halo{fill:#ffd36b}
+.char.beat-on .halo{animation:none;opacity:.5;transform-box:fill-box;transform-origin:center;transform:scale(1.25)}
+.wiz [class^=w]{opacity:0;transition:opacity 1s}.wiz[data-stage="0"] .w0,.wiz[data-stage="1"] .w0{opacity:1}
+.wiz[data-stage="1"] .w1,.wiz[data-stage="2"] .w1,.wiz[data-stage="3"] .w1,.wiz[data-stage="4"] .w1{opacity:1}
+.wiz[data-stage="2"] .w2,.wiz[data-stage="3"] .w2,.wiz[data-stage="4"] .w2{opacity:1}
+.wiz[data-stage="3"] .w3,.wiz[data-stage="4"] .w3{opacity:1}.wiz[data-stage="4"] .w4{opacity:1}
+.wiz .bubble{animation:rise 2s ease-in infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{0%{opacity:0;transform:translateY(0)}30%{opacity:.7}100%{opacity:0;transform:translateY(-30px)}}
+@keyframes pulse{50%{opacity:.5}}@keyframes blink{50%{opacity:.1}}
+@media(max-width:820px){.stage{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,.char *,.wiz *{animation:none!important;transition:none!important}}
+@media print{.pf-nav,button,.noprint{display:none}}
+</style></head><body>
+<nav class="pf-nav" aria-label="Portfolio"><ul><li><a href="../index.html">Portfolio</a></li><li><a href="../index.html">Home</a></li><li><a href="../index.html#work">Projects</a></li><li><a href="../index.html#about">About</a></li></ul></nav><a class="skip" href="#content">Skip to content</a>
+<main id="content">
+<div class="eyebrow">Creative project · Character, motion and sound · Fiction</div>
+<h1>Verdigris and the Golden Path</h1>
+<p class="lede">A clockwork-organic character who moves between brass machinery, AI-blue signals and green living growth — following one golden path through brewing incidents, pitfalls and a Wizard who keeps changing shape.</p>
+<p class="notice"><strong>What this is.</strong> An original fictional character study and interactive demonstration, drawn entirely as inline SVG and animated with CSS and a small script. It works offline, uses no external files and sends nothing anywhere. Symbols such as the golden path are creative interpretations, not claims about real events. <a href="verification.html">Verification and provenance</a> · <a href="presentation.html">Presentation</a> · <a href="manifest.json">Manifest (JSON)</a> · <a href="manifest.yaml">Manifest (YAML)</a>.</p>
+
+<section aria-labelledby="demo-h"><h2 id="demo-h">Meet Verdigris</h2>
+<div class="stage">
+<div class="stagebox"><svg id="v-char" class="char" data-mood="curious" viewBox="0 0 400 440" role="img" aria-labelledby="v-t v-d" xmlns="http://www.w3.org/2000/svg">
+<title id="v-t">Verdigris, the clockwork-organic automaton</title>
+<desc id="v-d">A brass-and-copper automaton with a cog-shaped head, one glowing AI-blue lens eye, a boiler chest with a pressure gauge, green vines growing along its arms and a golden path winding beneath its feet.</desc>
+<defs>
+<radialGradient id="v-brass" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#f6dc9c"/><stop offset=".55" stop-color="#d4a64f"/><stop offset="1" stop-color="#7b5521"/></radialGradient>
+<radialGradient id="v-copper" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#f2a36e"/><stop offset=".6" stop-color="#b8602f"/><stop offset="1" stop-color="#5d2c15"/></radialGradient>
+<radialGradient id="v-lens" cx="50%" cy="50%" r="55%"><stop offset="0" stop-color="#e8fbff"/><stop offset=".35" class="lens-mid" stop-color="#3fb8ff"/><stop offset="1" class="lens-edge" stop-color="#0a4f86"/></radialGradient>
+<linearGradient id="v-gold" x1="0" x2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#e5a823"/></linearGradient>
+</defs>
+<!-- golden path -->
+<path id="v-trackbase" d="M10 410 C90 380 120 430 200 412 S330 380 392 408" fill="none" stroke="#3a2f12" stroke-width="10" stroke-linecap="round"/>
+<path class="gold-path" id="v-track" d="M10 410 C90 380 120 430 200 412 S330 380 392 408" fill="none" stroke="url(#v-gold)" stroke-width="6" stroke-linecap="round" pathLength="100"/>
+<g class="walker">
+<!-- steam -->
+<g class="steam" fill="#dfe9ec"><circle cx="292" cy="150" r="9"/><circle cx="304" cy="124" r="13"/><circle cx="288" cy="92" r="17"/></g>
+<!-- legs -->
+<g class="legs"><rect x="150" y="318" width="26" height="70" rx="8" fill="url(#v-brass)"/><rect x="224" y="318" width="26" height="70" rx="8" fill="url(#v-brass)"/>
+<ellipse cx="158" cy="392" rx="30" ry="12" fill="url(#v-copper)"/><ellipse cx="238" cy="392" rx="30" ry="12" fill="url(#v-copper)"/></g>
+<!-- body: boiler chest -->
+<rect x="116" y="196" width="168" height="134" rx="34" fill="url(#v-copper)" stroke="#4a2410" stroke-width="3"/>
+<g stroke="#f3c98a" stroke-width="2" opacity=".8"><circle cx="134" cy="214" r="3"/><circle cx="266" cy="214" r="3"/><circle cx="134" cy="312" r="3"/><circle cx="266" cy="312" r="3"/></g>
+<!-- gauge -->
+<g transform="translate(200 262)"><circle r="34" fill="#17120a" stroke="url(#v-brass)" stroke-width="6"/>
+<g stroke="#e5bd7c" stroke-width="2"><line x1="-24" y1="14" x2="-19" y2="10"/><line x1="-26" y1="0" x2="-20" y2="0"/><line x1="-18" y1="-18" x2="-14" y2="-14"/><line x1="0" y1="-26" x2="0" y2="-20"/><line x1="18" y1="-18" x2="14" y2="-14"/><line x1="26" y1="0" x2="20" y2="0"/><line x1="24" y1="14" x2="19" y2="10"/></g>
+<line class="needle" x1="0" y1="0" x2="0" y2="-22" stroke="#ff7a59" stroke-width="3" stroke-linecap="round"/><circle r="4" fill="#e5bd7c"/></g>
+<!-- arms -->
+<g class="arm-l"><path d="M122 220 C80 236 66 280 78 318" fill="none" stroke="url(#v-brass)" stroke-width="18" stroke-linecap="round"/><circle cx="78" cy="324" r="14" fill="url(#v-copper)"/></g>
+<g class="arm-r"><path d="M278 220 C320 236 334 280 322 318" fill="none" stroke="url(#v-brass)" stroke-width="18" stroke-linecap="round"/><circle cx="322" cy="324" r="14" fill="url(#v-copper)"/></g>
+<!-- organic vines -->
+<g class="vines" fill="none" stroke="#5fcf7a" stroke-width="5" stroke-linecap="round">
+<path class="vine" pathLength="100" d="M80 316 C60 280 96 262 84 236 C76 220 110 212 122 224"/>
+<path class="vine" pathLength="100" d="M320 316 C340 282 304 262 318 238 C326 222 292 212 280 226"/>
+<path class="vine" pathLength="100" d="M130 330 C150 300 120 280 150 262"/>
+</g>
+<g class="leaves" fill="#7fe093"><ellipse cx="88" cy="240" rx="9" ry="5" transform="rotate(-30 88 240)"/><ellipse cx="68" cy="272" rx="9" ry="5" transform="rotate(30 68 272)"/><ellipse cx="314" cy="242" rx="9" ry="5" transform="rotate(30 314 242)"/><ellipse cx="336" cy="276" rx="9" ry="5" transform="rotate(-30 336 276)"/><ellipse cx="146" cy="268" rx="8" ry="4.5" transform="rotate(-20 146 268)"/></g>
+<!-- neck + head: cog -->
+<rect x="184" y="170" width="32" height="36" fill="#7b5521"/>
+<g transform="translate(200 120)"><g class="cog">
+<g fill="url(#v-brass)" stroke="#5b3d14" stroke-width="3">
+<rect x="-14" y="-72" width="28" height="22" rx="4"/><rect x="-14" y="50" width="28" height="22" rx="4"/><rect x="-72" y="-14" width="22" height="28" rx="4"/><rect x="50" y="-14" width="22" height="28" rx="4"/>
+<rect x="-14" y="-72" width="28" height="22" rx="4" transform="rotate(45)"/><rect x="-14" y="50" width="28" height="22" rx="4" transform="rotate(45)"/><rect x="-72" y="-14" width="22" height="28" rx="4" transform="rotate(45)"/><rect x="50" y="-14" width="22" height="28" rx="4" transform="rotate(45)"/>
+<circle r="58"/></g>
+<circle r="40" fill="#1a1308" stroke="#e5bd7c" stroke-width="3"/></g></g>
+<g class="eye" transform="translate(200 120)"><circle class="halo" r="34" fill="#3fb8ff" opacity=".22"/><circle r="26" fill="url(#v-lens)"/><ellipse class="pupil" rx="4" ry="12" fill="#06202f"/><circle cx="-8" cy="-9" r="5" fill="#fff" opacity=".85"/></g>
+<!-- antenna sprout -->
+<path d="M200 62 C198 44 214 38 216 22" fill="none" stroke="#5fcf7a" stroke-width="4" stroke-linecap="round"/><ellipse cx="222" cy="20" rx="10" ry="6" fill="#7fe093" transform="rotate(-25 222 20)"/><circle class="spark" cx="190" cy="40" r="4" fill="#3fb8ff"/>
+</g>
+</svg></div>
+<div class="panel">
+<h3>Mood</h3>
+<div class="row" role="group" aria-label="Character mood">
+<button data-mood-btn="curious" aria-pressed="true">Curious</button><button data-mood-btn="brewing" aria-pressed="false">Brewing</button>
+<button data-mood-btn="alarmed" aria-pressed="false">Alarmed</button><button data-mood-btn="triumphant" aria-pressed="false">Triumphant</button></div>
+<p id="live" class="live" role="status" aria-live="polite"></p>
+<label for="prog">Walk the golden path</label>
+<input id="prog" type="range" min="0" max="100" value="0" aria-describedby="prog-out"><div id="prog-out" class="live"></div>
+<h3>Rhythm</h3>
+<p class="live">Sound starts only when you press the button. A clock-tick, a steam-boiler thump, AI-blue blips and a golden arpeggio are synthesised in your browser; the lens pulses with the beat.</p>
+<div class="row"><button id="rhythm-btn" aria-pressed="false">Start rhythm (sound on)</button><span class="beat" id="beat" aria-hidden="true"></span></div>
+<label for="tempo">Tempo</label><input id="tempo" type="range" min="60" max="140" value="96"><div id="tempo-out" class="live">96 BPM</div>
+</div></div></section>
+
+<section aria-labelledby="wiz-h"><h2 id="wiz-h">The Wizard, in five episodes</h2>
+<p>The Wizard is an evolving fictional storytelling element. Move the slider to reveal the next stage; each episode adds a pitfall or a brewing incident. He is a device for the story, not an authority.</p>
+<div class="stage">
+<div class="stagebox"><svg id="wiz" class="wiz" data-stage="0" viewBox="0 0 240 300" role="img" aria-labelledby="wiz-t wiz-d" xmlns="http://www.w3.org/2000/svg">
+<title id="wiz-t">The Wizard, as currently revealed</title>
+<desc id="wiz-d">A fictional storytelling figure drawn in stages: first a drifting smudge of brew-smoke, then a silhouette, then a pointed hat and flask, then a beard of green vines, then a figure holding a golden thread whose face stays hidden.</desc>
+<defs><radialGradient id="wsmoke"><stop offset="0" stop-color="#9fb4ba" stop-opacity=".7"/><stop offset="1" stop-color="#9fb4ba" stop-opacity="0"/></radialGradient></defs>
+<ellipse class="w0" cx="120" cy="150" rx="86" ry="110" fill="url(#wsmoke)"/>
+<path class="w1" d="M120 70 C70 90 56 180 70 270 L170 270 C184 180 170 90 120 70Z" fill="#101a20" stroke="#3a4a52" stroke-width="3"/>
+<g class="w2"><path d="M120 6 L86 84 L154 84Z" fill="#1c2b44" stroke="#82d7ec" stroke-width="2"/><ellipse cx="120" cy="86" rx="46" ry="9" fill="#1c2b44" stroke="#82d7ec" stroke-width="2"/><path d="M112 40 l3 6 6 1-5 4 2 6-6-4-6 4 2-6-5-4 6-1z" fill="#ffd36b"/>
+<path d="M170 210 l30 0 -6 -26 -18 0z" fill="#3fb8ff" opacity=".85"/><rect x="180" y="170" width="8" height="16" fill="#9fb4ba"/><circle class="bubble" cx="184" cy="164" r="5" fill="#dff7ff"/></g>
+<g class="w3" fill="none" stroke="#5fcf7a" stroke-width="5" stroke-linecap="round"><path d="M100 118 C96 150 110 160 106 196"/><path d="M120 120 C120 156 134 168 128 206"/><path d="M140 118 C146 148 134 164 142 190"/></g>
+<g class="w4"><path d="M60 230 C90 214 110 240 140 222 S190 216 222 236" fill="none" stroke="url(#wgold)" stroke-width="5" stroke-linecap="round"/><rect x="104" y="96" width="32" height="30" rx="14" fill="#06090b"/></g>
+<defs><linearGradient id="wgold" x1="0" x2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#e5a823"/></linearGradient></defs>
+</svg></div>
+<div class="panel"><label for="ep">Episode</label><input id="ep" type="range" min="0" max="4" value="0" aria-describedby="ep-out"><div id="ep-out" class="live">Episode 1 of 5</div>
+<p id="ep-text" class="live" role="status" aria-live="polite"></p>
+<h3>Brewing lab</h3>
+<fieldset class="ing" style="border:0;padding:0;margin:0"><legend class="live">Choose ingredients, then brew. Outcomes are fixed, fictional and repeatable.</legend>
+<label for="ing-oil"><input id="ing-oil" type="checkbox">Cog-oil</label><label for="ing-moss"><input id="ing-moss" type="checkbox">Glow-moss</label><label for="ing-salt"><input id="ing-salt" type="checkbox">Spark-salt</label></fieldset>
+<div class="row"><button id="brew-btn">Brew</button></div><p id="brew-out" class="live" role="status" aria-live="polite"></p>
+</div></div></section>
+
+<section aria-labelledby="id-h"><h2 id="id-h">Visual identity</h2>
+<div class="grid">
+<div class="card"><div class="tag">Steampunk</div><h3>Brass, copper, clockwork</h3><p>A cog-shaped head, riveted copper boiler and a pressure gauge that reports mood as steam.</p></div>
+<div class="card"><div class="tag" style="color:var(--blue)">Cyber</div><h3>AI-blue illumination</h3><p>One lens eye and a spark on the antenna. Blue means signal; red means a pitfall has been noticed.</p></div>
+<div class="card"><div class="tag" style="color:var(--green)">Organic</div><h3>Green growth</h3><p>Vines extend along the arms as the character brews and retreat when alarmed. Growth is movement.</p></div>
+<div class="card"><div class="tag" style="color:var(--gold)">Golden path</div><h3>Connection and direction</h3><p>A creative symbol for joining machine, signal and living form into one chosen direction. Interpretation only.</p></div>
+</div></section>
+
+<section aria-labelledby="st-h"><h2 id="st-h">Verified and proposed</h2>
+<div class="scroll"><table><thead><tr><th scope="col">Capability</th><th scope="col">Status</th><th scope="col">Basis</th></tr></thead><tbody>
+<tr><td>Four mood states, golden-path progress, five Wizard stages, deterministic brewing lab</td><td class="verified">Implemented; checked in a browser</td><td>See <a href="verification.html">verification notes</a>.</td></tr>
+<tr><td>Synthesised rhythm with tempo control and beat-synchronised lens</td><td class="verified">Implemented; sound output not heard by the build agent</td><td>Scheduling and controls tested; audibility needs a human listen.</td></tr>
+<tr><td>Offline use, no network requests, restrictive content-security policy</td><td class="verified">Implemented; checked</td><td>Static checks in the notes.</td></tr>
+<tr><td>Episodic video or animated episodes; recorded soundtrack; sprite sheets</td><td class="proposed">Proposed only</td><td>Not built. Would need a human decision on tools and any licensed assets.</td></tr>
+<tr><td>Hand-drawn or AI-illustrated key art</td><td class="proposed">Proposed only</td><td>No raster art is included; the character is original vector work.</td></tr>
+</tbody></table></div></section>
+
+<footer>Verdigris and the Golden Path · Draft prepared 22 October 2026 · Fiction and creative interpretation. Project licensing remains separate; no new distribution rights are granted.</footer>
+</main>
+<script>(function(){'use strict';
+var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var char=$('#v-char'),live=$('#live');
+var MOODS={curious:'Curious: the lens scans, the gauge idles and the vines are barely awake.',
+brewing:'Brewing: steam rises, the gauge climbs and the vines thicken. Something is simmering that nobody quite specified.',
+alarmed:'Alarmed: the lens flares warning-red, the gauge hits the stop and the vines recoil. A pitfall has been noticed.',
+triumphant:'Triumphant: the lens turns gold, arms rise, vines are in full leaf. The golden path holds.'};
+function mood(m){if(!char||!MOODS[m])return;char.setAttribute('data-mood',m);$$('[data-mood-btn]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-mood-btn')===m))});if(live)live.textContent=MOODS[m]}
+$$('[data-mood-btn]').forEach(function(b){b.addEventListener('click',function(){mood(b.getAttribute('data-mood-btn'))})});
+/* golden path */
+var track=$('#v-track'),walker=$('.walker',char),prog=$('#prog'),pout=$('#prog-out');
+function walk(v){v=Math.max(0,Math.min(100,+v||0));if(char)char.style.setProperty('--prog',v);
+ if(track&&walker&&track.getPointAtLength){var L=track.getTotalLength(),p=track.getPointAtLength(L*v/100),s=track.getPointAtLength(0);
+  walker.style.transform='translate('+((v/100-0.5)*160)+'px,'+((p.y-410)*0.6)+'px)';}
+ if(pout)pout.textContent=Math.round(v)+'% of the golden path walked';
+ if(v>=100)mood('triumphant');}
+if(prog)prog.addEventListener('input',function(){walk(prog.value)});
+/* wizard stages */
+var wiz=$('#wiz'),ep=$('#ep'),eptext=$('#ep-text');
+var EPS=[
+['Episode 1 — The Smudge','The first brew leaves a smudge of smoke on the workshop window. Verdigris logs it as “weather”. Pitfall: an unlabelled assumption.'],
+['Episode 2 — The Silhouette','The smudge acquires edges. A shape stands where the schedule said nobody should. Pitfall: believing the dashboard instead of the room.'],
+['Episode 3 — Hat and Flask','A pointed hat. A flask that bubbles by itself. Brewing incident: three ingredients, no recipe, one very enthusiastic reaction.'],
+['Episode 4 — The Vine Beard','Green growth threads through the Wizard. Is he overgrown, or is the workshop? Pitfall: fixing the symptom that is also the feature.'],
+['Episode 5 — The Golden Thread','The Wizard holds one thread of the golden path and does not show his face. Verdigris must choose the direction himself. The Wizard remains an evolving fictional device, not an answer.']];
+function episode(i){i=Math.max(0,Math.min(4,+i));if(wiz)wiz.setAttribute('data-stage',String(i));if(eptext)eptext.innerHTML='<strong></strong> <span></span>';
+ if(eptext){eptext.firstChild.textContent=EPS[i][0]+'.';eptext.lastChild.textContent=EPS[i][1];}
+ var o=$('#ep-out');if(o)o.textContent='Episode '+(i+1)+' of 5';}
+if(ep){ep.addEventListener('input',function(){episode(ep.value)});episode(ep.value)}
+/* brewing lab: deterministic lookup, fictional */
+var BREW={'':['Nothing brewed','An empty flask. The most reliable result, and the least interesting.','calm'],
+'oil':['Slippery gears','Cog-oil alone: everything moves, nothing is held in place. Pitfall: unconstrained smoothness.','curious'],
+'moss':['Quiet glow','Glow-moss alone: a gentle green light. Nothing happens, and nobody minds.','triumphant'],
+'salt':['Static sneeze','Spark-salt alone: a crackle and a sneeze. Harmless, but the Wizard looks up.','alarmed'],
+'moss+oil':['Living gearbox','Moss grows through lubricated gears. The machine improves itself unobserved. A brewing incident worth a log entry.','brewing'],
+'oil+salt':['Overclocked clock','Every clock in the workshop strikes thirteen. Pitfall: speed mistaken for direction.','alarmed'],
+'moss+salt':['Lightning garden','Green sparks arc between leaves. Beautiful, unsafe, and immediately turned into a feature request.','brewing'],
+'moss+oil+salt':['The Golden Reaction','All three together form a thin gold thread that points somewhere. The Wizard smiles, or does something similar.','triumphant']};
+function brew(){var k=[];['moss','oil','salt'].forEach(function(n){var c=$('#ing-'+n);if(c&&c.checked)k.push(n)});
+ var key=k.join('+');if(k.length===2&&key==='oil+salt')key='oil+salt';
+ var r=BREW[key]||BREW[''];var out=$('#brew-out');if(out)out.textContent=r[0]+' — '+r[1];if(r[2]!=='calm')mood(r[2]);}
+var bb=$('#brew-btn');if(bb)bb.addEventListener('click',brew);
+/* rhythm: Web Audio, user-started, synthesised (no files, no network) */
+var ac=null,timer=null,nextT=0,step=0,bpm=96,on=false,beatEl=$('#beat');
+var tempo=$('#tempo'),tout=$('#tempo-out'),rb=$('#rhythm-btn');
+function blip(t,f,d,type,g){var o=ac.createOscillator(),a=ac.createGain();o.type=type;o.frequency.value=f;a.gain.setValueAtTime(g,t);a.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(a);a.connect(ac.destination);o.start(t);o.stop(t+d+0.02)}
+function tick(t){var n=ac.createBufferSource(),b=ac.createBuffer(1,2205,ac.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+ n.buffer=b;var f=ac.createBiquadFilter();f.type='highpass';f.frequency.value=3000;var a=ac.createGain();a.gain.value=0.25;n.connect(f);f.connect(a);a.connect(ac.destination);n.start(t)}
+var GOLD=[392,494,587,784];
+function play(t,s){var m=s%16;if(m%2===0)tick(t);if(m%4===0)blip(t,110,0.4,'triangle',0.3);if(m===6||m===14)blip(t,880,0.12,'sine',0.12);if(m===10||m===15)blip(t,GOLD[(s>>2)%4],0.35,'triangle',0.1);
+ var delay=Math.max(0,(t-ac.currentTime)*1000);setTimeout(function(){if(!on)return;if(char&&m%4===0){char.classList.add('beat-on');setTimeout(function(){char.classList.remove('beat-on')},120)}if(beatEl&&m%4===0){beatEl.classList.add('on');setTimeout(function(){beatEl.classList.remove('on')},120)}},delay)}
+function sched(){while(nextT<ac.currentTime+0.15){play(nextT,step);nextT+=60/bpm/4;step++}}
+function toggle(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC){if(rb)rb.textContent='Audio not supported in this browser';return}
+ if(!on){if(!ac)ac=new AC();if(ac.resume)ac.resume();on=true;step=0;nextT=ac.currentTime+0.05;timer=setInterval(sched,25);rb.setAttribute('aria-pressed','true');rb.textContent='Stop rhythm'}
+ else{on=false;clearInterval(timer);rb.setAttribute('aria-pressed','false');rb.textContent='Start rhythm (sound on)'}}
+if(rb)rb.addEventListener('click',toggle);
+if(tempo)tempo.addEventListener('input',function(){bpm=+tempo.value;if(tout)tout.textContent=bpm+' BPM'});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&on)toggle()});
+mood('curious');walk(0);
+window.__verdigris={mood:mood,walk:walk,episode:episode,brew:brew};
+}());</script></body></html>
